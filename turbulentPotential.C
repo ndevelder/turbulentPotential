@@ -45,6 +45,15 @@ addToRunTimeSelectionTable(RASModel, turbulentPotential, dictionary);
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
+tmp<volScalarField> turbulentPotential::Ts() const
+{
+    return max(k_/epsilon_, 6.0*sqrt(nu()/epsilon_));
+}
+
+tmp<volScalarField> turbulentPotential::TsEh() const
+{
+    return max(1.0/epsHat_, 6.0*sqrt(nu()/epsilon_));
+}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -327,7 +336,11 @@ turbulentPotential::turbulentPotential
    (
        coeffDict_.lookup("eqnEpsHat")
    ),
-
+   
+   timeScaleEps_
+   (
+       coeffDict_.lookup("timeScaleEps")
+   ),
 
     y_(mesh_),
 
@@ -703,14 +716,22 @@ turbulentPotential::turbulentPotential
 
     Info<< "Made it past constructors " << endl;
 
+    // Calculate eddy viscosity
     if(solveNut_ == "true")
     {
-    // Calculate eddy viscosity
-       nut_ = cMu_*k_*k_*tpphi_/(epsHat_*k_);
-       //nut_.correctBoundaryConditions();
+		if(timeScaleEps_ == "epsilon" || timeScaleEps_ != "epsHat")
+		{
+            nut_ = cMu_*k_*tpphi_*Ts();
+            nut_.correctBoundaryConditions();
+        }
+        
+        if(timeScaleEps_ == "epsHat")
+		{
+            nut_ = cMu_*k_*tpphi_*TsEh();
+            nut_.correctBoundaryConditions();
+        }
+        
     }
-
-    //Info<< "Made it past nut" << endl;
 
     kSafe_ = max(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
 
@@ -748,8 +769,6 @@ tmp<volSymmTensorField> turbulentPotential::R() const
 // Not used but necessary for RAS Model
 tmp<volSymmTensorField> turbulentPotential::devReff() const
 {
-    //Info<< "Using devReff" << endl;
-
     return tmp<volSymmTensorField>
     (
         new volSymmTensorField
@@ -767,7 +786,7 @@ tmp<volSymmTensorField> turbulentPotential::devReff() const
     );
 }
 
-
+// Term that is directly added to the momentum equation
 tmp<fvVectorMatrix> turbulentPotential::divDevReff(volVectorField& U) const
 {
     return
@@ -896,7 +915,7 @@ void turbulentPotential::correct()
 	    cEp2_ =  cEp2con_;
     }
 
-    cP1eqn_ = 2.0*(0.5+0.5*((tpProd_*k_)/epsilon_));
+    cP1eqn_ = 2.0*(0.5+0.5*((tpProd_*k_)/epsilonSafe_));
 
 
     //Dissipation equation
@@ -971,10 +990,21 @@ void turbulentPotential::correct()
     }
 
 
+    // Calculate eddy viscosity
     if(solveNut_ == "true")
     {
-        nut_ = cMu_*k_*k_*tpphi_/(epsHat_*k_);
-        nut_.correctBoundaryConditions();
+		if(timeScaleEps_ == "epsilon" || timeScaleEps_ != "epsHat")
+		{
+            nut_ = cMu_*k_*tpphi_*Ts();
+            nut_.correctBoundaryConditions();
+        }
+        
+        if(timeScaleEps_ == "epsHat")
+		{
+            nut_ = cMu_*k_*tpphi_*TsEh();
+            nut_.correctBoundaryConditions();
+        }
+        
     }
 
 

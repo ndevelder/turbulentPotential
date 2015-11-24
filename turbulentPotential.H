@@ -136,6 +136,7 @@ class turbulentPotential
             word              eqnSigmaPsi_;
             word              eqncEp2_;
 			word              eqnEpsHat_;
+            word              timeScaleEps_;
 
         //- Wall distance field
         //  Note: different to wall distance in parent RASModel
@@ -182,7 +183,11 @@ class turbulentPotential
 
     // Private member functions
 
-
+    //- Return time scale, Ts using epsilon
+    tmp<volScalarField> Ts() const;
+    
+    //- Return time scale, TsEh using epsHat
+    tmp<volScalarField> TsEh() const;
 
 
 public:
