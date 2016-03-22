@@ -26,48 +26,22 @@ Class
     Foam::incompressible::RASModels::turbulentPotential
 
 Description
-    Implementation of the k-omega-SST turbulence model for incompressible
+    Implementation of the Turbulent Potential turbulence model for incompressible
     flows.
 
     Turbulence model described in:
     @verbatim
-        Menter, F., Esch, T.
-        "Elements of Industrial Heat Transfer Prediction"
-        16th Brazilian Congress of Mechanical Engineering (COBEM),
-        Nov. 2001
+        Perot, J. Blair
+        "Turbulence modeling using body force potentials"
+        Physic of Fluids,
+        1999
     @endverbatim
-
-    Note that this implementation is written in terms of alpha diffusion
-    coefficients rather than the more traditional sigma (alpha = 1/sigma) so
-    that the blending can be applied to all coefficuients in a consistent
-    manner.  The paper suggests that sigma is blended but this would not be
-    consistent with the blending of the k-epsilon and k-omega models.
-
-    Also note that the error in the last term of equation (2) relating to
-    sigma has been corrected.
-
-    Wall-functions are applied in this implementation by using equations (14)
-    to specify the near-wall omega as appropriate.
-
-    The blending functions (15) and (16) are not currently used because of the
-    uncertainty in their origin, range of applicability and that is y+ becomes
-    sufficiently small blending u_tau in this manner clearly becomes nonsense.
 
     The default model coefficients correspond to the following:
     @verbatim
         turbulentPotentialCoeffs
         {
-            alphaK1     0.85034;
-            alphaK2     1.0;
-            alphaOmega1 0.5;
-            alphaOmega2 0.85616;
-            beta1       0.075;
-            beta2       0.0828;
-            betaStar    0.09;
-            gamma1      0.5532;
-            gamma2      0.4403;
-            a1          0.31;
-            c1          10.0;
+
         }
     @endverbatim
 
@@ -107,6 +81,8 @@ class turbulentPotential
             dimensionedScalar cEp3_;
             dimensionedScalar cD1_;
             dimensionedScalar cD2_;
+            dimensionedScalar cVv1_;
+            dimensionedScalar cTv1_;
             dimensionedScalar cP1_;
             dimensionedScalar cP2_;
             dimensionedScalar cP3_;
@@ -135,8 +111,11 @@ class turbulentPotential
             word              eqnSigmaPhi_;
             word              eqnSigmaPsi_;
             word              eqncEp2_;
-			word              eqnEpsHat_;
+       	    word              eqnEpsHat_;
             word              timeScaleEps_;
+			word              prodType_;
+			word              debugWrite_;
+			word              tslimiter_;
 
         //- Wall distance field
         //  Note: different to wall distance in parent RASModel
@@ -152,26 +131,28 @@ class turbulentPotential
             volScalarField tpphi_;
             volScalarField tpphisqrt_;
             volVectorField vorticity_;
+			volVectorField phis_;
             volVectorField vorticityTmp_;
             volVectorField ivorticity_;
             volVectorField tppsi_;
-            volVectorField uGrad_;
+            volTensorField uGrad_;
             volScalarField epsHat_;
-	        volScalarField kol_;
-	        volScalarField kSafe_;
-	        volScalarField kSqrt_;
-	        volVectorField gradkSqrt_;
-	        volScalarField nutSafe_;
-	        volScalarField epsilonSafe_;
-	        volScalarField sigmaK_;
-	        volScalarField sigmaEps_;
-	        volScalarField sigmaPhi_;
-	        volScalarField sigmaPsi_;
-	        volScalarField cEp2_;
-	        volScalarField tpProd_;
-	        volScalarField cP1eqn_;
-	        volScalarField dimRat_;
-	        volVectorField graddimRat_;
+	    volScalarField kol_;
+	    volScalarField kSafe_;
+	    volScalarField kSqrt_;
+	    volVectorField gradkSqrt_;
+	    volScalarField nutSafe_;
+	    volScalarField epsilonSafe_;
+	    volScalarField sigmaK_;
+	    volScalarField sigmaEps_;
+	    volScalarField sigmaPhi_;
+	    volScalarField sigmaPsi_;
+	    volScalarField cEp2_;
+	    volScalarField tpProd_;
+	    volScalarField cP1eqn_;
+	    volScalarField dimRat_;
+	    volVectorField gradTpphi_;
+            volTensorField gradTppsi_;
             volScalarField tpProdSqr_;
             volScalarField tpProd3d_;
 
@@ -221,6 +202,33 @@ public:
             return nut_;
         }
 
+        //- Return phiS
+        tmp<volSymmTensorField> phiS() const
+        {
+            return tmp<volSymmTensorField>
+            (
+                new volSymmTensorField("phiS", tpphi_*symm(uGrad_))
+            );
+        }
+		
+	//- Return divergence of phiS
+        tmp<volVectorField> divphiS() const
+        {
+            return tmp<volVectorField>
+            (
+                new volVectorField("divphiS", fvc::div(phiS()))
+            );
+        }
+		
+	//- Return s
+        tmp<volVectorField> sreal() const
+        {
+            return tmp<volVectorField>
+            (
+                new volVectorField("sreal", phis_/(tpphi_*k_))
+            );
+        }
+
 
         //- Return the phi/k
         tmp<volScalarField> PhiOverK() const
@@ -259,7 +267,7 @@ public:
             );
         }
 
-        //- Return the gradK
+        //- Return the local turbulent reynolds number
         tmp<volScalarField> reTau() const
         {
             return tmp<volScalarField>
