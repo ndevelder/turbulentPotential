@@ -951,19 +951,20 @@ void turbulentPotential::correct()
  
  	volScalarField S2 = magSqr(dev(symm(uGrad_)));
     volScalarField G("RASModel::G", nut_*2*S2);
+    volScalarField GdK("GdK", G/(k_ + k0_));
     
 	if(prodType_ == "strain")
 	{
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
-		volScalarField Gdk = G/k_;
+		Gdk = G/k_;
 	}
 	else
 	{
 		tpProd_ = (tppsi_ & vorticity_);
 		G = tpProd_*k_;
-		volScalarField GdK = tpProd_;		
+		GdK = tpProd_;		
 	}
     
 	tpProdSqr_ = sqr(tpProd_);
