@@ -794,6 +794,8 @@ turbulentPotential::turbulentPotential
             nut_ = cMu_*k_*tpphi_*TsEh();
         }
         
+        nut_.correctBoundaryConditions();
+        
     }
 
     kSafe_ = max(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
@@ -864,7 +866,6 @@ tmp<fvVectorMatrix> turbulentPotential::divDevReff(volVectorField& U) const
 }
 
 
-
 bool turbulentPotential::read()
 {
     if (RASModel::read())
@@ -876,29 +877,27 @@ bool turbulentPotential::read()
         cP2_.readIfPresent(coeffDict());
         cP3_.readIfPresent(coeffDict());
         cMu_.readIfPresent(coeffDict());
-	cPphi_.readIfPresent(coeffDict());
-	cEhm_.readIfPresent(coeffDict());
-	cEhR_.readIfPresent(coeffDict());
-	cPr_.readIfPresent(coeffDict());
-	cD1_.readIfPresent(coeffDict());
-	cD2_.readIfPresent(coeffDict());
+		cPphi_.readIfPresent(coeffDict());
+		cEhm_.readIfPresent(coeffDict());
+		cEhR_.readIfPresent(coeffDict());
+		cPr_.readIfPresent(coeffDict());
+		cD1_.readIfPresent(coeffDict());
+		cD2_.readIfPresent(coeffDict());
         cVv1_.readIfPresent(coeffDict());
         cTv1_.readIfPresent(coeffDict());
-	cT_.readIfPresent(coeffDict());
-	sigmaKInit_.readIfPresent(coeffDict());
+		cT_.readIfPresent(coeffDict());
+		sigmaKInit_.readIfPresent(coeffDict());
         sigmaEpsInit_.readIfPresent(coeffDict());
         sigmaEpsVisc_.readIfPresent(coeffDict());
         sigmaPhiInit_.readIfPresent(coeffDict());
-	sigmaPsiInit_.readIfPresent(coeffDict());
-	nutBlend_.readIfPresent(coeffDict());
-	nutScale_.readIfPresent(coeffDict());
-
+		sigmaPsiInit_.readIfPresent(coeffDict());
+		nutBlend_.readIfPresent(coeffDict());
+		nutScale_.readIfPresent(coeffDict());
 
         return true;
     }
     else
     {
-
         return false;
     }
 }
@@ -919,7 +918,7 @@ void turbulentPotential::correct()
         y_.correct();
         bound(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
         bound(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-15));
-	bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-15));
+		bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-15));
     }
 
     // Set the time scale using either epsilon or epsHat
@@ -938,140 +937,43 @@ void turbulentPotential::correct()
         bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-15));
     }
         
-	
+    //*************************************//	
     // Vorticity
+    //*************************************//
+    
     vorticity_ = fvc::curl(U_);
 	uGrad_ = fvc::grad(U_);
-	
-	// Production Terms
-	const volSymmTensorField PS("PS",tpphi_*k_*(symm(uGrad_)));
-	const volVectorField divPS("divPS",fvc::div(PS));
-	const volScalarField divps("divps",fvc::div(phis_));
-	const volVectorField curlps("curlps",fvc::curl(phis_));
-	const volVectorField curldivPS("curldivPS",fvc::curl(divPS));
-	const volScalarField phiOnly("phiOnly",phiReal());	
 
-	if(prodType_ == "seqn" && debugWrite_ == "true")
-	{
-	PS.write();
-	vorticity_.write();
-	divPS.write();
-	curldivPS.write();
-	phis_.write();
-	uGrad_.write();
-	phiOnly.write();
-	k_.write();
-	tpphi_.write();
-    }
-	
-	volScalarField S2 = magSqr(dev(symm(uGrad_)));
-    volScalarField G("RASModel::G", 0.88*nut_*2*S2);
-	
+
+    //*************************************//	
     // Production
-	if(prodType_ == "seqn")
-	{
-		phis_.correctBoundaryConditions();		
-       
-		// s equation
-		tmp<fvVectorMatrix> phisEqn
-		(
-			fvm::laplacian(phis_)
-			==
-			fvc::curl(divPS) 
-		);
-		
-		phisEqn().relax();
-		solve(phisEqn);
-        
-		tpProd_ = cPr_*(tppsi_ & (phis_/k_));
-		G = cPr_*(tppsi_ & phis_);
-	}
-	else if(prodType_ == "strain")
+    //*************************************//
+ 
+ 	volScalarField S2 = magSqr(dev(symm(uGrad_)));
+    volScalarField G("RASModel::G", nut_*2*S2);
+    
+	if(prodType_ == "strain")
 	{
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
-		
-		const volScalarField vortProd("vortProd",(cPr_*(tppsi_ & vorticity_)));
-		const volScalarField Gdiff(tpProd_ - vortProd);
-		const scalar GdiffSum(gSum(Gdiff));
-		const scalar tpProdSum(gSum(tpProd_));
-		const scalar vortProdSum(gSum(vortProd));
-		
-		Info<< "GdiffSum: " <<GdiffSum << " TP Prod: " << tpProdSum << " Vort Prod: " << vortProdSum <<endl; 
-	}
-	else if(prodType_ == "mixed")
-	{
-		const volVectorField psiTmp(tppsi_);
-		const volScalarField psiX(psiTmp.component(vector::X));
-		const volScalarField psiY(psiTmp.component(vector::Y));
-		const volScalarField psiZ(psiTmp.component(vector::Z));
-		
-		const volSymmTensorField Rdev("Rdev",-1.0*nut_*twoSymm(uGrad_));
-		const volScalarField Rxx("Rxx",Rdev.component(tensor::XX));
-		const volScalarField Ryy("Ryy",Rdev.component(tensor::YY));
-		const volScalarField RyyPhi("RyyPhi",tpphi_);
-		const volScalarField Rzz("Rzz",Rdev.component(tensor::ZZ));
-		
-		const volSymmTensorField Rp("Rp",symmTensor(0,0,0,0,0,0)*(Rxx/k_) + symmTensor(0,0,0,0,0,0)*(Rzz/k_) + symmTensor(0,0,0,0,0,0)*(Ryy/k_) + symmTensor(0,1,0,0,0,0)*psiZ + symmTensor(0,0,1,0,0,0)*psiY + symmTensor(0,0,0,0,1,0)*psiX);			
-		const volSymmTensorField S1("S1",symm(fvc::grad(U_)));
-		tpProd_ = cPr_*(-1.0*Rp && S1); 
-		G = tpProd_*k_;
-		
-		const volScalarField vortProd("vortProd",(cPr_*(tppsi_ & vorticity_)));
-		const volScalarField Gdiff(tpProd_ - vortProd);
-		const scalar GdiffSum(gSum(Gdiff));
-		
-		Info<< "GdiffSum: " <<GdiffSum <<endl; 
-		
-		if(prodType_ == "mixed" && debugWrite_ == "true")
-	    {  
-		Rp.write();
-		S1.write();
-		tpProd_.write();
-		vorticity_.write();
-		k_.write();
-		tpphi_.write();
-		tppsi_.write();
-		U_.write();
-		vortProd.write();
-		nut_.write();
-		Ryy.write();
-		RyyPhi.write();
-		G.write();
-		}
+		volScalarField Gdk = G/k_;
 	}
 	else
 	{
-		tpProd_ = cPr_*(tppsi_ & vorticity_);
-		
-		const volScalarField gradProd("gradProd",2.0*nut_*magSqr(symm(fvc::grad(U_))));
-		const volScalarField vortPsi("vPsi",mag(nut_*vorticity_.component(2)));
-		const volScalarField vortSqrProd("vortSqrProd",nut_*vorticity_ & vorticity_);
-		const volScalarField Gdiff(G - gradProd);
-		const scalar GdiffSum(gSum(Gdiff));
-		const scalar tpProdSum(gSum(G));
-		const scalar gradProdSum(gSum(gradProd));
-		const volSymmTensorField Rconst(nut_*twoSymm(fvc::grad(U_)));
-		const volTensorField RconstT(nut_*(fvc::grad(U_)));
-		const volTensorField RconstTT(RconstT.T());
-		const volScalarField RxyGrad(mag(Rconst.component(1)));
-		const volScalarField RxyGradT(mag(RconstTT.component(1)));
-		const volVectorField psiTmp(tppsi_*k_);
-		const volScalarField psiZ(mag(psiTmp.component(2)));
-		
-		Info<< "GdiffSum: " <<GdiffSum << " TP Prod: " << tpProdSum << " Grad Prod: " << gradProdSum << " Vort Squared Prod: " << gSum(vortSqrProd) <<endl; 
-		Info<< "Psi Z: " << gSum(psiZ) << " RxyGrad: " << gSum(RxyGrad) << " RxyGradT: " << gSum(RxyGradT) << " vPsi: " << gSum(vortPsi)   <<endl;
-		Info<< "Tensor XY: " << tensor::XY << " Tensor YX: " << tensor::YX <<endl;
-		Info<< "nut sum: " << gSum(nut_) <<endl;
+		tpProd_ = (tppsi_ & vorticity_);
+		G = tpProd_*k_;
+		volScalarField Gdk = tpProd_;		
 	}
     
 	tpProdSqr_ = sqr(tpProd_);
     tpProd3d_ = mag(psiReal() ^ vorticity_);
 	
 
-	
-    // Epsilon-hat and Sigma Equations
+    //*************************************//	
+    // Epsilon-tilda-hat
+    //*************************************//
+    
 	if(eqnEpsHat_ == "mod")
 	{
         epsHat_ = (epsilon_)/(k_ + cEhm_*nu()*mag(gradkSqrt_));
@@ -1094,6 +996,11 @@ void turbulentPotential::correct()
 	    bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-15));
 	}
 
+
+    //*************************************//
+    // Non-constant Constants 
+    //*************************************//
+    
     if(eqnSigmaK_ == "true")
     {
 	    sigmaK_ = 0.67 + 0.33*(tpProd_/epsHat_);
@@ -1128,7 +1035,10 @@ void turbulentPotential::correct()
     cP1eqn_ = 2.0*(0.5+0.5*((tpProd_*k_)/epsilonSafe_));
 
 
+    //*************************************//
     //Dissipation equation
+    //*************************************//
+    
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
@@ -1138,7 +1048,7 @@ void turbulentPotential::correct()
      ==
        cEp1_*G/TsEh() 
      + fvm::Sp(-1.0*cEp2_/TsEh(),epsilon_)
-     //+ cEp3_*tpProd3d_/TsEh()
+     + cEp3_*tpProd3d_/TsEh()
     );
 
     if(solveEps_ == "true")
@@ -1148,8 +1058,10 @@ void turbulentPotential::correct()
     bound(epsilon_,dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-15));
     }
 
-
+    //*************************************//
     // Turbulent kinetic energy equation
+    //*************************************//
+    
     tmp<fvScalarMatrix> kEqn
     (
 
@@ -1169,7 +1081,12 @@ void turbulentPotential::correct()
     solve(kEqn);
     bound(k_,dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
     }
-
+    
+    
+    //*************************************//
+	// Update K-related fields
+    //*************************************//
+    	
     kSqrt_ = sqrt(k_);
     bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), 3.16e-8));
     kSqrt_.correctBoundaryConditions();
@@ -1179,7 +1096,11 @@ void turbulentPotential::correct()
    
     volScalarField GdK("GdK", G/k_);
 
+
+    //*************************************//
     // Phi/K equation
+    //*************************************//
+    
     tmp<fvScalarMatrix> tpphiEqn
     (
         fvm::ddt(tpphi_)
@@ -1203,34 +1124,34 @@ void turbulentPotential::correct()
     bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-15));
     }
 
-
+	// Re-calculate phi/k gradient
     gradTpphi_ = fvc::grad(tpphi_);
 
 
+    //*************************************//
     // Calculate eddy viscosity
+    //*************************************//
+    
     if(solveNut_ == "true")
     {
         if(timeScaleEps_ == "epsilon" || timeScaleEps_ != "epsHat")
 		{
             nut_ = cMu_*k_*tpphi_*Ts();
-            nut_.correctBoundaryConditions();
         }
         
         if(timeScaleEps_ == "epsHat")
 		{
-            nut_ = cMu_*k_*tpphi_*TsEh();
-            nut_.correctBoundaryConditions();
+            nut_ = cMu_*k_*tpphi_*TsEh();           
         }
+        
+        nut_.correctBoundaryConditions();
         
     }
 	
-	volScalarField phiActual(tpphi_*k_);
-	volScalarField psiActual(tppsi_.component(2)*k_);
-	
-	Info<< "Maximum nut: " << gMax(nut_) << " Maximum K: " << gMax(k_) << " Maximum Epsilon: " << gMax(epsilon_) <<endl;
-    Info<< "Maximum Phi: " << gMax(phiActual) << " Maximum Psi: " << gMax(psiActual) << " Maximum Production: " << gMax(G) <<endl;
-
+    //*************************************//   
     // Psi Equation
+    //*************************************//
+    
     tmp<fvVectorMatrix> tppsiEqn
     (
         fvm::ddt(tppsi_)
@@ -1254,8 +1175,22 @@ void turbulentPotential::correct()
     tppsiEqn().relax();
     solve(tppsiEqn);
     }
-
+	
+	// Re-calculate psi/k gradient
     gradTppsi_ = fvc::grad(tppsi_);
+
+
+    //*************************************//   
+    // Output some max values
+    //*************************************//
+    
+    volScalarField phiActual(tpphi_*k_);
+	volScalarField psiActual(tppsi_.component(2)*k_);
+	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
+	
+	Info<< "Maximum nut: " << gMax(nut_) << " Maximum K: " << gMax(k_) << " Maximum Epsilon: " << gMax(epsilon_) <<endl;
+    Info<< "Maximum Phi: " << gMax(phiActual) << " Maximum Psi: " << gMax(psiActual) << " Maximum Production: " << gMax(G) <<endl;
+    Info<< "Maximum 3D Production: " << gMax(tpProd3d_) << " Maximum uTauSquared: " << gMax(uTauSquared) << endl;
 
 }
 
