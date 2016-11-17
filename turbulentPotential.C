@@ -958,7 +958,7 @@ void turbulentPotential::correct()
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
-		Gdk = G/k_;
+		GdK = G/k_;
 	}
 	else
 	{
