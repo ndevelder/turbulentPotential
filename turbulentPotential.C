@@ -963,7 +963,7 @@ void turbulentPotential::correct()
 	{
 		tpProd_ = (tppsi_ & vorticity_);
 		G = tpProd_*k_;
-		volScalarField Gdk = tpProd_;		
+		volScalarField GdK = tpProd_;		
 	}
     
 	tpProdSqr_ = sqr(tpProd_);
@@ -1093,10 +1093,10 @@ void turbulentPotential::correct()
 
     gradk_ = fvc::grad(k_);
     gradkSqrt_ = fvc::grad(kSqrt_);
+    
+    Info<< "Made it past K and related" <<endl;
+    
    
-    volScalarField GdK("GdK", G/k_);
-
-
     //*************************************//
     // Phi/K equation
     //*************************************//
