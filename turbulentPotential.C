@@ -51,10 +51,10 @@ tmp<volScalarField> turbulentPotential::Ts() const
 {
 	if(tslimiter_ == "true")
 	{
-        return max(k_/epsilon_, 6.0*sqrt(nu()/epsilon_));
+        return max(k_/(epsilon_ + epsilonSmall_), 6.0*sqrt(nu()/epsilon_));
 	}
 	
-    return (k_/epsilon_);
+    return (k_/(epsilon_ + epsilonSmall_));
 }
 
 tmp<volScalarField> turbulentPotential::TsEh() const
@@ -1167,7 +1167,7 @@ void turbulentPotential::correct()
       + (1.0 - cP2_)*tpphi_*vorticity_
       + fvm::Sp(-cD1_*Alpha()*tpProd_,tppsi_)
       + fvm::Sp(-1.0*(cP1_*nutFrac()*(1.0-Alpha()))*epsHat_,tppsi_)
-      + fvm::Sp(-0.12*Alpha()*(epsilon_/k_),tppsi_)
+      + fvm::Sp(-0.12*Alpha()*(epsilon_/(k_+k0_)),tppsi_)
       + cT_*sqrt((nut_/nu()))*vorticity_
     );
 
