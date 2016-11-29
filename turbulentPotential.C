@@ -817,7 +817,7 @@ turbulentPotential::turbulentPotential
         
     }
 
-    kSafe_ = max(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
+    kSafe_ = max(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-10));
 
     Info<< "solveK is: " <<solveK_ <<endl;
     Info<< "solveEps is: " <<solveEps_ <<endl;
@@ -934,9 +934,9 @@ void turbulentPotential::correct()
     if (mesh_.changing())
     {
         y_.correct();
-        bound(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
-        bound(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-15));
-		bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-15));
+        bound(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-10));
+        bound(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-10));
+		bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-10));
     }
 
     // Set the time scale using either epsilon or epsHat
@@ -946,13 +946,13 @@ void turbulentPotential::correct()
     if(timeScaleEps_ == "epsilon" || timeScaleEps_ != "epsHat")
     {
         T = Ts();
-        bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-15));
+        bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-10));
     }
         
     if(timeScaleEps_ == "epsHat")
     {
         T = TsEh();
-        bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-15));
+        bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-10));
     }
         
     //*************************************//	
@@ -972,7 +972,7 @@ void turbulentPotential::correct()
     volScalarField GdK("GdK", G/(k_ + k0_));
     
 	if(prodType_ == "strain"){
-		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
+		volScalarls -labsField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
 		GdK = G/k_;
@@ -993,23 +993,23 @@ void turbulentPotential::correct()
 	if(eqnEpsHat_ == "mod")
 	{
         epsHat_ = (epsilon_)/(k_ + cEhm_*nu()*mag(gradkSqrt_));
-        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-15));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
 	}
 	else if(eqnEpsHat_ == "dif")
 	{
         epsHat_ = (epsilon_ - 2.0*nu()*sqr(mag(gradkSqrt_)))/k_;
-        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-15));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
 	}
 	else if(eqnEpsHat_ == "rough")
 	{
         epsHat_ = (epsilon_ - cEhR_*nu()*sqr(mag(gradkSqrt_)))/k_;
-        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-15));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
 	}
 	else
 	{
         Info<< "No EpsHat Model Chosen" <<endl;
 	    epsHat_ = (epsilon_)/(k_ + cEhm_*nu()*mag(fvc::grad(kSqrt_)));
-	    bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-15));
+	    bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
 	}
 
 
@@ -1037,7 +1037,7 @@ void turbulentPotential::correct()
 	    sigmaEps_ = 0.33 + 0.4*(tpProd_/epsHat_);
     }
 
-    epsilonSafe_ = max(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-15));
+    epsilonSafe_ = max(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-10));
 
     if(eqncEp2_ == "true")
     {
@@ -1071,7 +1071,7 @@ void turbulentPotential::correct()
     {
     epsEqn().relax();
     solve(epsEqn);
-    bound(epsilon_,dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-15));
+    bound(epsilon_,dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-10));
     }
 
     //*************************************//
@@ -1095,7 +1095,7 @@ void turbulentPotential::correct()
     {
     kEqn().relax();
     solve(kEqn);
-    bound(k_,dimensionedScalar("minK", k_.dimensions(), 1.0e-15));
+    bound(k_,dimensionedScalar("minK", k_.dimensions(), 1.0e-10));
     }
     
     
@@ -1144,7 +1144,7 @@ void turbulentPotential::correct()
     {
     tpphiEqn().relax();
     solve(tpphiEqn);
-    bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-15));
+    bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-10));
     }
 
 	// Re-calculate phi/k gradient
