@@ -1212,9 +1212,9 @@ void turbulentPotential::correct()
 	volScalarField psiActual(tppsi_.component(2)*k_);
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
 	
-	Info<< "Maximum nut: " << gMax(nut_) << " Maximum K: " << gMax(k_) << " Maximum Epsilon: " << gMax(epsilon_) <<endl;
-    Info<< "Maximum Phi: " << gMax(phiActual) << " Maximum Psi: " << gMax(psiActual) << " Maximum Production: " << gMax(G) <<endl;
-    Info<< "Maximum 3D Production: " << gMax(tpProd3d_) << " Maximum uTauSquared: " << gMax(uTauSquared) << endl;
+	Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
+    Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max Production: " << gMax(G) <<endl;
+    Info<< "Max 3D Production: " << gMax(tpProd3d_) << " Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
 
 }
 
