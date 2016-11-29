@@ -169,6 +169,15 @@ turbulentPotential::turbulentPotential
             0.12
         )
     ),
+    cP4_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "cP4",
+            coeffDict_,
+            0.85714
+        )
+    ),
     cPphi_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -205,6 +214,16 @@ turbulentPotential::turbulentPotential
             "cPr",
             coeffDict_,
             1.0
+        )
+    ),
+
+	cPw_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "cPw",
+            coeffDict_,
+            25.0
         )
     ),
 
@@ -826,9 +845,7 @@ tmp<volSymmTensorField> turbulentPotential::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            (
-			  (2.0/3.0)*I)*k_ - nut_*twoSymm(fvc::grad(U_)
-			)
+            ((2.0/3.0)*I)*k_ - nut_*twoSymm(fvc::grad(U_))
         )
     );
 }
@@ -876,6 +893,7 @@ bool turbulentPotential::read()
         cP1_.readIfPresent(coeffDict());
         cP2_.readIfPresent(coeffDict());
         cP3_.readIfPresent(coeffDict());
+		cP4_.readIfPresent(coeffDict());
         cMu_.readIfPresent(coeffDict());
 		cPphi_.readIfPresent(coeffDict());
 		cEhm_.readIfPresent(coeffDict());
@@ -953,15 +971,12 @@ void turbulentPotential::correct()
     volScalarField G("RASModel::G", nut_*2*S2);
     volScalarField GdK("GdK", G/(k_ + k0_));
     
-	if(prodType_ == "strain")
-	{
+	if(prodType_ == "strain"){
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
 		GdK = G/k_;
-	}
-	else
-	{
+	} else {
 		tpProd_ = (tppsi_ & vorticity_);
 		G = tpProd_*k_;
 		GdK = tpProd_;		
@@ -1048,7 +1063,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
        cEp1_*G/TsEh() 
-     + fvm::Sp(-1.0*cEp2_/TsEh(),epsilon_)
+     - fvm::Sp(cEp2_/TsEh(),epsilon_)
      + cEp3_*tpProd3d_/TsEh()
     );
 
@@ -1109,12 +1124,19 @@ void turbulentPotential::correct()
       + fvm::SuSp(-fvc::div(phi_), tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
-        4.2*nutFrac()*(1.0-Alpha())*epsHat_*((2.0/3.0) - tpphi_)
-      + 0.5*GdK*tpphi_
-      + fvm::Sp(-1.0*GdK,tpphi_)
-      + tpphi_/Ts()
-      + fvm::Sp((-2.0*Alpha() - cD2_/(1.0+0.12*(nut_/nu())))/Ts(),tpphi_)
-      + (cVv1_*nu()+cTv1_*nut_)*(gradkSqrt_ & gradTpphi_)/kSqrt_
+	  //Pressure Strain
+        cPphi_*nutFrac()*(2*Alpha()-0.67)*epsHat_*tpphi_
+      + 0.67*GdK*tpphi_
+	  // Prod from K eqn
+      - fvm::Sp(GdK,tpphi_)
+	  // Dissipation
+      - fvm::Sp(0.5/Ts(),tpphi_)
+	  // Pressure diffusion
+	  + cPphi_*Alpha()*((tppsi_ & tppsi_)/((nut_/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
+	  - fvm::Sp(cPphi_*Alpha()*GdK,tpphi_) 
+	  // Extra diffusion terms
+      + (cVv1_*nu())*(gradkSqrt_ & gradTpphi_)/kSqrt_
+	  // Transition
       + cT_*tpProd_*sqrt((nut_/nu()))
     );
 
@@ -1163,11 +1185,12 @@ void turbulentPotential::correct()
       ==
 
         0.21*(2.0*Alpha()-1.0)*tpphi_*vorticity_
-      + fvm::Sp(-1.0*(1.0 - cP2_)*tpProd_, tppsi_)
-      + (1.0 - cP2_)*tpphi_*vorticity_
-      + fvm::Sp(-cD1_*Alpha()*tpProd_,tppsi_)
-      + fvm::Sp(-1.0*(cP1_*nutFrac()*(1.0-Alpha()))*epsHat_,tppsi_)
-      + fvm::Sp(-0.12*Alpha()*(epsilon_/(k_+k0_)),tppsi_)
+      - fvm::Sp((1.0 - 0.5)*tpProd_, tppsi_)
+      + (1.0 - 0.6667)*tpphi_*vorticity_
+      - fvm::Sp(2.0*Alpha()*tpProd_,tppsi_)
+      - fvm::Sp((cP1_*nutFrac()*(1.0-Alpha()))*epsHat_,tppsi_)
+      - fvm::Sp(0.09*Alpha()*(epsilon_/(k_+k0_)),tppsi_)
+	  + (cTv1_*nut_)*(gradk_ & gradTppsi_)/k_
       + cT_*sqrt((nut_/nu()))*vorticity_
     );
 
