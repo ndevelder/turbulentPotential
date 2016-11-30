@@ -324,7 +324,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("DepsilonEff", nut_*sigmaEps_ + nu()*sigmaEpsVisc_)
+                new volScalarField("DepsilonEff", nut_*sigmaEps_ + nu())
             );
         }
 
@@ -342,7 +342,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("DpsiEff", nut_*sigmaPsi_ + psiNuFrac_*nu())
+                new volScalarField("DpsiEff", nut_*sigmaPsi_ + nu())
             );
         }
 

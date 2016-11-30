@@ -130,7 +130,7 @@ turbulentPotential::turbulentPotential
         (
             "cVv1",
             coeffDict_,
-            2.0
+            0.0
         )
     ),
     cTv1_
@@ -1110,7 +1110,7 @@ void turbulentPotential::correct()
     gradk_ = fvc::grad(k_);
     gradkSqrt_ = fvc::grad(kSqrt_);
     
-    Info<< "Made it past K and related" <<endl;
+    Info<< "Made it past K" <<endl;
     
    
     //*************************************//
@@ -1168,8 +1168,10 @@ void turbulentPotential::correct()
         }
         
         nut_.correctBoundaryConditions();
-        
+        bound(nut_,dimensionedScalar("minNut", nut_.dimensions(), 1.0e-10));
     }
+	
+	Info<< "Made it past nut" <<endl;
 	
     //*************************************//   
     // Psi Equation
@@ -1190,7 +1192,7 @@ void turbulentPotential::correct()
       - fvm::Sp(2.0*Alpha()*tpProd_,tppsi_)
       - fvm::Sp((cP1_*nutFrac()*(1.0-Alpha()))*epsHat_,tppsi_)
       - fvm::Sp(0.09*Alpha()*(epsilon_/(k_+k0_)),tppsi_)
-	  + (cTv1_*nut_)*(gradk_ & gradTppsi_)/k_
+	  + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
       + cT_*sqrt((nut_/nu()))*vorticity_
     );
 
