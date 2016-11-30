@@ -975,11 +975,20 @@ void turbulentPotential::correct()
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
+				
+		bound(G, dimensionedScalar("minG", G.dimensions(), 1.0e-10));
+		bound(tpProd_, dimensionedScalar("mintpProd", tpProd_.dimensions(), 1.0e-10));
+		
 		GdK = G/k_;
+		
 	} else {
 		tpProd_ = (tppsi_ & vorticity_);
 		G = tpProd_*k_;
-		GdK = tpProd_;		
+		
+		bound(G, dimensionedScalar("minG", G.dimensions(), 1.0e-10));
+		bound(tpProd_, dimensionedScalar("mintpProd", tpProd_.dimensions(), 1.0e-10));
+		
+		GdK = tpProd_;			
 	}
     
 	tpProdSqr_ = sqr(tpProd_);
