@@ -94,6 +94,7 @@ class turbulentPotential
             dimensionedScalar cPw_;
             dimensionedScalar cEhm_;
             dimensionedScalar cEhR_;
+			dimensionedScalar cNF_;
             dimensionedScalar sigmaKInit_;
             dimensionedScalar sigmaEpsInit_;
             dimensionedScalar sigmaEpsVisc_;
@@ -118,6 +119,7 @@ class turbulentPotential
 			word              prodType_;
 			word              debugWrite_;
 			word              tslimiter_;
+			word			  eqncMu_;
 
         //- Wall distance field
         //  Note: different to wall distance in parent RASModel
@@ -274,7 +276,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("reTau", k_*k_/(nu()*epsilon_))
+                new volScalarField("reTau", k_*k_/(nu()*(epsilon_ + epsilonSmall_)))
             );
         }
 
@@ -290,7 +292,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("nutFrac", nut()/(nut()+5.0*nu()))
+                new volScalarField("nutFrac", nut()/(nut()+cNF_*nu()))
             );
         }
 

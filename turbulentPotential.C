@@ -51,7 +51,7 @@ tmp<volScalarField> turbulentPotential::Ts() const
 {
 	if(tslimiter_ == "true")
 	{
-        return max(k_/(epsilon_ + epsilonSmall_), 6.0*sqrt(nu()/epsilon_));
+        return max(k_/(epsilon_ + epsilonSmall_), 6.0*sqrt(nu()/(epsilon_ + epsilonSmall_)));
 	}
 	
     return (k_/(epsilon_ + epsilonSmall_));
@@ -61,7 +61,7 @@ tmp<volScalarField> turbulentPotential::TsEh() const
 {
 	if(tslimiter_ == "true")
 	{
-        return max(1.0/epsHat_, 6.0*sqrt(nu()/epsilon_));
+        return max(1.0/epsHat_, 6.0*sqrt(nu()/(epsilon_ + epsilonSmall_)));
 	}
 	
     return (1.0/epsHat_);
@@ -247,6 +247,16 @@ turbulentPotential::turbulentPotential
         )
     ),
 
+	cNF_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "cNF",
+            coeffDict_,
+            1.0
+        )
+    ),
+
     sigmaKInit_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -401,6 +411,10 @@ turbulentPotential::turbulentPotential
    tslimiter_
    (
        coeffDict_.lookup("tslimiter")
+   ),
+   eqncMu_
+   (
+       coeffDict_.lookup("eqncMu")
    ),
     y_(mesh_),
 
@@ -975,20 +989,11 @@ void turbulentPotential::correct()
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
         G = nut_*2*S2;
 		tpProd_ = G/k_;
-				
-		bound(G, dimensionedScalar("minG", G.dimensions(), 1.0e-10));
-		bound(tpProd_, dimensionedScalar("mintpProd", tpProd_.dimensions(), 1.0e-10));
-		
 		GdK = G/k_;
-		
 	} else {
 		tpProd_ = (tppsi_ & vorticity_);
 		G = tpProd_*k_;
-		
-		bound(G, dimensionedScalar("minG", G.dimensions(), 1.0e-10));
-		bound(tpProd_, dimensionedScalar("mintpProd", tpProd_.dimensions(), 1.0e-10));
-		
-		GdK = tpProd_;			
+		GdK = tpProd_;		
 	}
     
 	tpProdSqr_ = sqr(tpProd_);
@@ -1057,7 +1062,7 @@ void turbulentPotential::correct()
         cEp2_ =  cEp2con_;
     }
 
-    cP1eqn_ = 2.0*(0.5+0.5*((tpProd_*k_)/epsilonSafe_));
+    cP1eqn_ = 2.0*(0.4+0.6*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
 
 
     //*************************************//
@@ -1113,7 +1118,7 @@ void turbulentPotential::correct()
     //*************************************//
     	
     kSqrt_ = sqrt(k_);
-    bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), 3.16e-8));
+    bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), 1.0e-5));
     kSqrt_.correctBoundaryConditions();
 
     gradk_ = fvc::grad(k_);
@@ -1125,6 +1130,7 @@ void turbulentPotential::correct()
     //*************************************//
     // Phi/K equation
     //*************************************//
+	
     
     tmp<fvScalarMatrix> tpphiEqn
     (
@@ -1134,19 +1140,19 @@ void turbulentPotential::correct()
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
 	  //Pressure Strain
-        cPphi_*nutFrac()*(2*Alpha()-0.67)*epsHat_*tpphi_
-      + 0.67*GdK*tpphi_
+        cP1eqn_*nutFrac()*(2*Alpha()-(cP1eqn_/3.0))*epsHat_*tpphi_
+      + 0.6*GdK*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation
-      - fvm::Sp(0.5/Ts(),tpphi_)
-	  // Pressure diffusion
-	  + cPphi_*Alpha()*((tppsi_ & tppsi_)/((nut_/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
-	  - fvm::Sp(cPphi_*Alpha()*GdK,tpphi_) 
+      - fvm::Sp(0.457/Ts(),tpphi_)
+	  // Pressure diffusionnano 
+	  + 2.0*Alpha()*((tppsi_ & tppsi_)/((((nu()/100.0)+nut_)/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
+	  - fvm::Sp(2.0*Alpha()*GdK,tpphi_) 
 	  // Extra diffusion terms
-      + (cVv1_*nu())*(gradkSqrt_ & gradTpphi_)/kSqrt_
+      + (cVv1_*nu())*(gradkSqrt_ & gradTpphi_)/(kSqrt_ + sqrt(k0_))
 	  // Transition
-      + cT_*tpProd_*sqrt((nut_/nu()))
+      + cT_*tpProd_*sqrt((((nu()/100.0)+nut_)/nu()))
     );
 
     if(solvePhi_ == "true")
@@ -1196,13 +1202,13 @@ void turbulentPotential::correct()
       ==
 
         0.21*(2.0*Alpha()-1.0)*tpphi_*vorticity_
-      - fvm::Sp((1.0 - 0.5)*tpProd_, tppsi_)
-      + (1.0 - 0.6667)*tpphi_*vorticity_
+      - fvm::Sp((1.0 - 0.4)*tpProd_, tppsi_)
+      + (1.0 - 0.577)*tpphi_*vorticity_
       - fvm::Sp(2.0*Alpha()*tpProd_,tppsi_)
       - fvm::Sp((cP1_*nutFrac()*(1.0-Alpha()))*epsHat_,tppsi_)
       - fvm::Sp(0.09*Alpha()*(epsilon_/(k_+k0_)),tppsi_)
 	  + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
-      + cT_*sqrt((nut_/nu()))*vorticity_
+      + cT_*sqrt((((nu()/100.0)+nut_)/nu()))*vorticity_
     );
 
     if(solvePsi_ == "true")
