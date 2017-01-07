@@ -621,10 +621,10 @@ turbulentPotential::turbulentPotential
             "kSqrt",
             runTime_.timeName(),
             mesh_,
-            IOobject::MUST_READ,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh_
+        sqrt(k_)
     ),
     gradkSqrt_
     (
@@ -1119,13 +1119,18 @@ void turbulentPotential::correct()
     	
     kSqrt_ = sqrt(k_);
     bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), 1.0e-5));
-    kSqrt_.correctBoundaryConditions();
+    //kSqrt_.correctBoundaryConditions();
 
     gradk_ = fvc::grad(k_);
     gradkSqrt_ = fvc::grad(kSqrt_);
     
-    Info<< "Made it past K" <<endl;
-    
+    //Info<< "Made it past K" <<endl;
+	
+	//label patchID1 = mesh_.boundaryMesh().findPatchID("WALL_TOP"); 
+    //Info<< k_.boundaryField()[patchID1] << endl;
+
+	//label patchID2 = mesh_.boundaryMesh().findPatchID("WALL_BOTTOM"); 
+    //Info<< k_.boundaryField()[patchID2] << endl;	
    
     //*************************************//
     // Phi/K equation
@@ -1145,7 +1150,7 @@ void turbulentPotential::correct()
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation
-      - fvm::Sp(0.457/Ts(),tpphi_)
+      - fvm::Sp(0.457/TsEh(),tpphi_)
 	  // Pressure diffusionnano 
 	  + 2.0*Alpha()*((tppsi_ & tppsi_)/((((nu()/100.0)+nut_)/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
 	  - fvm::Sp(2.0*Alpha()*GdK,tpphi_) 
