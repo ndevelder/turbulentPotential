@@ -33,6 +33,8 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// Hello
+
 namespace Foam
 {
 namespace incompressible
@@ -61,10 +63,10 @@ tmp<volScalarField> turbulentPotential::TsEh() const
 {
 	if(tslimiter_ == "true")
 	{
-        return max(1.0/epsHat_, 6.0*sqrt(nu()/(epsilon_ + epsilonSmall_)));
+        return max(1.0/(epsHat_+ dimensionedScalar("minEh", epsHat_.dimensions(), VSMALL)), dimensionedScalar("minEh", dimensionSet(0,0,1,0,0,0,0), VSMALL) + 6.0*sqrt(nu()/(epsilon_ + epsilonSmall_)));
 	}
 	
-    return (1.0/epsHat_);
+    return (1.0/(epsHat_+ dimensionedScalar("minEh", epsHat_.dimensions(), 1e-10)));
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -81,7 +83,7 @@ turbulentPotential::turbulentPotential
 
     cEp1_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cEp1",
             coeffDict_,
@@ -90,7 +92,7 @@ turbulentPotential::turbulentPotential
     ),
     cEp2con_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cEp2con",
             coeffDict_,
@@ -99,7 +101,7 @@ turbulentPotential::turbulentPotential
     ),
     cEp3_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cEp3",
             coeffDict_,
@@ -108,7 +110,7 @@ turbulentPotential::turbulentPotential
     ),
     cD1_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cD1",
        	    coeffDict_,
@@ -117,7 +119,7 @@ turbulentPotential::turbulentPotential
     ),
     cD2_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cD2",
        	    coeffDict_,
@@ -126,7 +128,7 @@ turbulentPotential::turbulentPotential
     ),
     cVv1_
     (
-     	dimensioned<scalar>::lookupOrAddToDict
+     	dimensionedScalar::lookupOrAddToDict
         (
             "cVv1",
             coeffDict_,
@@ -135,7 +137,7 @@ turbulentPotential::turbulentPotential
     ),
     cTv1_
     (
-     	dimensioned<scalar>::lookupOrAddToDict
+     	dimensionedScalar::lookupOrAddToDict
         (
             "cTv1",
             coeffDict_,
@@ -144,7 +146,7 @@ turbulentPotential::turbulentPotential
     ),
     cP1_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cP1",
             coeffDict_,
@@ -153,7 +155,7 @@ turbulentPotential::turbulentPotential
     ),
     cP2_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cP2",
             coeffDict_,
@@ -162,7 +164,7 @@ turbulentPotential::turbulentPotential
     ),
     cP3_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cP3",
             coeffDict_,
@@ -171,7 +173,7 @@ turbulentPotential::turbulentPotential
     ),
     cP4_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cP4",
             coeffDict_,
@@ -180,7 +182,7 @@ turbulentPotential::turbulentPotential
     ),
     cPphi_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cPphi",
             coeffDict_,
@@ -189,127 +191,115 @@ turbulentPotential::turbulentPotential
     ),
     cMu_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cMu",
             coeffDict_,
             0.21
         )
     ),
-
     cT_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cT",
             coeffDict_,
             0.0033
         )
     ),
-
     cPr_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cPr",
             coeffDict_,
             1.0
         )
     ),
-
 	cPw_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cPw",
             coeffDict_,
             25.0
         )
     ),
-
     cEhm_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cEhm",
             coeffDict_,
             10.0
         )
     ),
-
     cEhR_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cEhR",
             coeffDict_,
             1.0
         )
     ),
-
 	cNF_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "cNF",
             coeffDict_,
             1.0
         )
     ),
-
     sigmaKInit_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "sigmaKInit",
             coeffDict_,
             1.0
         )
     ),
-
     sigmaEpsInit_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "sigmaEpsInit",
             coeffDict_,
             0.833
         )
     ),
-
     sigmaEpsVisc_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "sigmaEpsVisc",
             coeffDict_,
             1.0
         )
     ),
-
     sigmaPhiInit_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "sigmaPhiInit",
             coeffDict_,
             0.33
         )
     ),
-
     sigmaPsiInit_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "sigmaPsiInit",
             coeffDict_,
             1.0
         )
     ),
-
     nutScale_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "nutScale",
             coeffDict_,
@@ -318,7 +308,7 @@ turbulentPotential::turbulentPotential
     ),
     nutBlend_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "nutBlend",
             coeffDict_,
@@ -327,7 +317,7 @@ turbulentPotential::turbulentPotential
     ),
     psiNuFrac_
     (
-        dimensioned<scalar>::lookupOrAddToDict
+        dimensionedScalar::lookupOrAddToDict
         (
             "psiNuFrac",
             coeffDict_,
@@ -416,395 +406,334 @@ turbulentPotential::turbulentPotential
    (
        coeffDict_.lookup("eqncMu")
    ),
-    y_(mesh_),
-
-
-    k_
+   y_
+   (
+   mesh_
+   ),
+    
+	k_
     (
         IOobject
         (
             "k",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_
     ),
-    gradk_
+    
+	gradk_
     (
         IOobject
         (
             "gradk",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        fvc::grad(k_)
+        (fvc::grad(k_))
     ),
-    epsilon_
+    
+	epsilon_
     (
         IOobject
         (
             "epsilon",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_
     ),
-    nut_
+    
+	nut_
     (
         IOobject
         (
             "nut",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_
     ),
-    nutNorm_
+    
+	nutNorm_
     (
         IOobject
         (
             "nutNorm",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         (nut_/max(nut_))
     ),
-    tpphi_
+    
+	tpphi_
     (
         IOobject
         (
             "tpphi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_
     ),
-    tpphisqrt_
+    
+	tpphisqrt_
     (
         IOobject
         (
             "tpphi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
-        sqrt(tpphi_)
+        (sqrt(tpphi_))
     ),
-    vorticity_
+    
+	vorticity_
     (
         IOobject
         (
             "vorticity",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        fvc::curl(U_)
+        (fvc::curl(U_))
     ),
-	phis_
-    (
-        IOobject
-        (
-            "phis",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_
-    ),
-    vorticityTmp_
-    (
-        IOobject
-        (
-            "vorticityTmp",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        fvc::curl(U_)
-    ),
-    ivorticity_
-    (
-        IOobject
-        (
-            "ivorticity",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedVector("iv", dimensionSet(0,0,1,0,0,0,0), vector(1.0,1.0,1.0))
-    ),
-    tppsi_
+    
+	tppsi_
     (
         IOobject
         (
             "tppsi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_
     ),
-    uGrad_
+    
+	uGrad_
     (
         IOobject
         (
             "uGrad",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        fvc::grad(U_)
+        (fvc::grad(U_))
     ),
+	
 	epsHat_
     (
         IOobject
         (
             "epsHat",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh_,
-        dimensionedScalar("epsHat", dimensionSet(0,0,-1,0,0,0,0), 1.0)
+        (epsilon_/(k_ + k0_))
     ),
-    kol_
-    (
-        IOobject
-        (
-            "kol",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("kol", dimensionSet(0,0,-1,0,0,0,0), 0.0)
-    ),
-    kSafe_
-    (
-        IOobject
-        (
-            "kSafe",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        (k_)
-    ),
-    kSqrt_
+    
+	kSqrt_
     (
         IOobject
         (
             "kSqrt",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        sqrt(k_)
+        (sqrt(k_))
     ),
-    gradkSqrt_
+    
+	gradkSqrt_
     (
         IOobject
         (
             "gradkSqrt",
             runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        fvc::grad(kSqrt_)
-    ),
-    nutSafe_
-    (
-        IOobject
-        (
-            "nutSafe",
-            runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        (nut_)
+        (fvc::grad(kSqrt_))
     ),
-    epsilonSafe_
-    (
-        IOobject
-        (
-            "epsilonSafe",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        (epsilon_)
-    ),
-    sigmaK_
+    
+	sigmaK_
     (
         IOobject
         (
             "sigmaK",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
-        sigmaKInit_
+        (sigmaKInit_)
     ),
-    sigmaEps_
+    
+	sigmaEps_
     (
         IOobject
         (
             "sigmaEps",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
-        sigmaEpsInit_
+        (sigmaEpsInit_)
     ),
-    sigmaPhi_
+    
+	sigmaPhi_
     (
         IOobject
         (
             "sigmaPhi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
-        sigmaPhiInit_
+        (sigmaPhiInit_)
     ),
-    sigmaPsi_
+    
+	sigmaPsi_
     (
         IOobject
         (
             "sigmaPsi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         mesh_,
-        sigmaPsiInit_
+        (sigmaPsiInit_)
     ),
-    cEp2_
+    
+	cEp2_
     (
         IOobject
         (
             "cEp2",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (cEp2con_ - 0.16*exp(-0.1*sqr(k_)/(nu()*epsilon_)))
     ),
-    tpProd_
+    
+	tpProd_
     (
         IOobject
         (
             "tpProd",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        cPr_*(2*nut_*magSqr(symm(fvc::grad(U_)))/k_)
+        (cPr_*(2*nut_*magSqr(symm(fvc::grad(U_)))/k_))
     ),
-    cP1eqn_
+    
+	cP1eqn_
     (
         IOobject
         (
             "cP1eqn",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        2.0*(0.5+0.5*((tpProd_*k_)/epsilon_))
+        (2.0*(0.5+0.5*((tpProd_*k_)/epsilon_)))
     ),
-    dimRat_
+    
+	dimRat_
     (
         IOobject
         (
             "dimRat",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         (psiReal() & psiReal())/(k_*phiReal())
     ),
-    gradTpphi_
+    
+	gradTpphi_
     (
         IOobject
         (
             "gradTpphi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        fvc::grad(tpphi_)
+        (fvc::grad(tpphi_))
     ),
-    gradTppsi_
+    
+	gradTppsi_
     (
         IOobject
         (
             "gradTppsi",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        fvc::grad(tppsi_)
+        (fvc::grad(tppsi_))
     ),
-    tpProdSqr_
+    
+	tpProdSqr_
     (
         IOobject
         (
             "tpProdSqr",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        sqr(tppsi_ & vorticity_)
+        (sqr(tppsi_ & vorticity_))
     ),
-    tpProd3d_
+    
+	tpProd3d_
     (
         IOobject
         (
             "tpProd3d",
             runTime_.timeName(),
-            mesh_,
+            U_.db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
@@ -828,10 +757,8 @@ turbulentPotential::turbulentPotential
         }
         
         nut_.correctBoundaryConditions();
-        
+        bound(nut_,dimensionedScalar("minNut", nut_.dimensions(), 1e-10));       
     }
-
-    kSafe_ = max(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-10));
 
     Info<< "solveK is: " <<solveK_ <<endl;
     Info<< "solveEps is: " <<solveEps_ <<endl;
@@ -938,42 +865,28 @@ bool turbulentPotential::read()
 void turbulentPotential::correct()
 {
 
+
+    if (mesh_.changing())
+    {
+        y_.correct();
+        bound(k_, dimensionedScalar("minK", k_.dimensions(), SMALL));
+        bound(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), SMALL));
+		bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
+    }
+	
     RASModel::correct();
 
     if (!turbulence_)
     {
         return;
     }
-
-    if (mesh_.changing())
-    {
-        y_.correct();
-        bound(k_, dimensionedScalar("minK", k_.dimensions(), 1.0e-10));
-        bound(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-10));
-		bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-10));
-    }
-
-    // Set the time scale using either epsilon or epsHat
-    volScalarField T("TimeScale",Ts());
-    volScalarField Teh("TimescaleEpsHat",TsEh());
 	
-    if(timeScaleEps_ == "epsilon" || timeScaleEps_ != "epsHat")
-    {
-        T = Ts();
-        bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-10));
-    }
-        
-    if(timeScaleEps_ == "epsHat")
-    {
-        T = TsEh();
-        bound(T, dimensionedScalar("minT", T.dimensions(), 1.0e-10));
-    }
         
     //*************************************//	
     // Vorticity
     //*************************************//
     
-    vorticity_ = fvc::curl(U_);
+	vorticity_ = fvc::curl(U_);
 	uGrad_ = fvc::grad(U_);
 
 
@@ -981,23 +894,23 @@ void turbulentPotential::correct()
     // Production
     //*************************************//
  
- 	volScalarField S2 = magSqr(dev(symm(uGrad_)));
-    volScalarField G("RASModel::G", nut_*2*S2);
-    volScalarField GdK("GdK", G/(k_ + k0_));
+	volScalarField S2 = magSqr(dev(symm(uGrad_)));
+	volScalarField G("RASModel::G", nut_*2*S2);
+	volScalarField GdK("GdK", G/(k_ + k0_));
     
 	if(prodType_ == "strain"){
 		volScalarField S2 = magSqr(dev(symm(fvc::grad(U_))));
-        G = nut_*2*S2;
+		G = nut_*2*S2;
 		tpProd_ = G/k_;
 		GdK = G/k_;
 	} else {
-		tpProd_ = (tppsi_ & vorticity_);
+		tpProd_ = mag(tppsi_ & vorticity_);
 		G = tpProd_*k_;
 		GdK = tpProd_;		
 	}
     
 	tpProdSqr_ = sqr(tpProd_);
-    tpProd3d_ = mag(psiReal() ^ vorticity_);
+	tpProd3d_ = mag(psiReal() ^ vorticity_);
 	
 
     //*************************************//	
@@ -1007,23 +920,23 @@ void turbulentPotential::correct()
 	if(eqnEpsHat_ == "mod")
 	{
         epsHat_ = (epsilon_)/(k_ + cEhm_*nu()*mag(gradkSqrt_));
-        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
 	else if(eqnEpsHat_ == "dif")
 	{
         epsHat_ = (epsilon_ - 2.0*nu()*sqr(mag(gradkSqrt_)))/k_;
-        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
 	else if(eqnEpsHat_ == "rough")
 	{
-        epsHat_ = (epsilon_ - cEhR_*nu()*sqr(mag(gradkSqrt_)))/k_;
-        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
+        epsHat_ = epsilon_/(k_+k0_);
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
 	else
 	{
         Info<< "No EpsHat Model Chosen" <<endl;
 	    epsHat_ = (epsilon_)/(k_ + cEhm_*nu()*mag(fvc::grad(kSqrt_)));
-	    bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), 1.0e-10));
+	    bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
 
 
@@ -1051,11 +964,11 @@ void turbulentPotential::correct()
 	    sigmaEps_ = 0.33 + 0.4*(tpProd_/epsHat_);
     }
 
-    epsilonSafe_ = max(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-10));
+
 
     if(eqncEp2_ == "true")
     {
-        cEp2_ = cEp2con_ - 0.16*exp(-0.25*sqr(k_)/(nu()*epsilonSafe_));
+        cEp2_ = cEp2con_ - 0.16*exp(-0.25*sqr(k_)/(nu()*(epsilon_ + epsilonSmall_)));
     }
     else
     {
@@ -1063,6 +976,8 @@ void turbulentPotential::correct()
     }
 
     cP1eqn_ = 2.0*(0.4+0.6*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
+	
+
 
 
     //*************************************//
@@ -1077,7 +992,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
        cEp1_*G/TsEh() 
-     - fvm::Sp(cEp2_/TsEh(),epsilon_)
+     + fvm::Sp(-1.0*cEp2_/TsEh(),epsilon_)
      + cEp3_*tpProd3d_/TsEh()
     );
 
@@ -1085,7 +1000,7 @@ void turbulentPotential::correct()
     {
     epsEqn().relax();
     solve(epsEqn);
-    bound(epsilon_,dimensionedScalar("minEps", epsilon_.dimensions(), 1.0e-10));
+    bound(epsilon_,epsilonSmall_);
     }
 
     //*************************************//
@@ -1101,7 +1016,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DkEff(), k_)
      ==
         G
-      - fvm::Sp(epsilon_/k_,k_)
+      + fvm::Sp(-1.0*epsilon_/k_,k_)
     );
 
 
@@ -1109,7 +1024,7 @@ void turbulentPotential::correct()
     {
     kEqn().relax();
     solve(kEqn);
-    bound(k_,dimensionedScalar("minK", k_.dimensions(), 1.0e-10));
+    bound(k_,k0_);
     }
     
     
@@ -1117,20 +1032,38 @@ void turbulentPotential::correct()
 	// Update K-related fields
     //*************************************//
     	
-    kSqrt_ = sqrt(k_);
-    bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), 1.0e-5));
+    kSqrt_ = sqrt(mag(k_)+k0_);
+    bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), sqrt(SMALL)));
     //kSqrt_.correctBoundaryConditions();
 
     gradk_ = fvc::grad(k_);
     gradkSqrt_ = fvc::grad(kSqrt_);
     
-    //Info<< "Made it past K" <<endl;
+    //Info<< "Made it past Ksqrt" <<endl;
 	
-	//label patchID1 = mesh_.boundaryMesh().findPatchID("WALL_TOP"); 
-    //Info<< k_.boundaryField()[patchID1] << endl;
+	//label patchID1 = mesh_.boundaryMesh().findPatchID("FOIL_LEAD"); 
+	//Info<< tppsi_.boundaryField()[patchID1] << endl;
 
 	//label patchID2 = mesh_.boundaryMesh().findPatchID("WALL_BOTTOM"); 
     //Info<< k_.boundaryField()[patchID2] << endl;	
+	
+	
+	//*************************************//	
+    // Production Update
+    //*************************************//
+ 
+    
+	//if(prodType_ == "strain"){
+	//	tpProd_ = G/(k_+k0_);
+	//	GdK = G/(k_+k0_);
+	//} else {
+	//	tpProd_ = psiReal()/k_
+	//	G = tpProd_*k_;
+	//	GdK = tpProd_;		
+	//}
+	
+	//Info<< "Made it past Prod Update" <<endl;
+	
    
     //*************************************//
     // Phi/K equation
@@ -1145,26 +1078,26 @@ void turbulentPotential::correct()
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
 	  //Pressure Strain
-        cP1eqn_*nutFrac()*(2*Alpha()-(cP1eqn_/3.0))*epsHat_*tpphi_
+        2.0*nutFrac()*(2*Alpha()-(cP1eqn_/3.0))*tpphi_/TsEh()
       + 0.6*GdK*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation
       - fvm::Sp(0.457/TsEh(),tpphi_)
-	  // Pressure diffusionnano 
+	  // Pressure diffusion 
 	  + 2.0*Alpha()*((tppsi_ & tppsi_)/((((nu()/100.0)+nut_)/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
 	  - fvm::Sp(2.0*Alpha()*GdK,tpphi_) 
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradkSqrt_ & gradTpphi_)/(kSqrt_ + sqrt(k0_))
 	  // Transition
-      + cT_*tpProd_*sqrt((((nu()/100.0)+nut_)/nu()))
+      //+ cT_*tpProd_*sqrt((((nu()/100.0)+nut_)/nu()))
     );
 
     if(solvePhi_ == "true")
     {
     tpphiEqn().relax();
     solve(tpphiEqn);
-    bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), 1.0e-10));
+    bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
     }
 
 	// Re-calculate phi/k gradient
@@ -1188,10 +1121,11 @@ void turbulentPotential::correct()
         }
         
         nut_.correctBoundaryConditions();
-        bound(nut_,dimensionedScalar("minNut", nut_.dimensions(), 1.0e-10));
+        nut_ = min(nut_,1.0e5*nu());
+        bound(nut_,dimensionedScalar("minNut", nut_.dimensions(), ROOTVSMALL));
     }
 	
-	Info<< "Made it past nut" <<endl;
+//	Info<< "Made it past nut" <<endl;
 	
     //*************************************//   
     // Psi Equation
@@ -1212,8 +1146,8 @@ void turbulentPotential::correct()
       - fvm::Sp(2.0*Alpha()*tpProd_,tppsi_)
       - fvm::Sp((cP1_*nutFrac()*(1.0-Alpha()))*epsHat_,tppsi_)
       - fvm::Sp(0.09*Alpha()*(epsilon_/(k_+k0_)),tppsi_)
-	  + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
-      + cT_*sqrt((((nu()/100.0)+nut_)/nu()))*vorticity_
+      + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
+      //+ cT_*sqrt((((nu()/100.0)+nut_)/nu()))*vorticity_
     );
 
     if(solvePsi_ == "true")
@@ -1222,7 +1156,7 @@ void turbulentPotential::correct()
     solve(tppsiEqn);
     }
 	
-	// Re-calculate psi/k gradient
+    // Re-calculate psi/k gradient
     gradTppsi_ = fvc::grad(tppsi_);
 
 
@@ -1234,7 +1168,7 @@ void turbulentPotential::correct()
 	volScalarField psiActual(tppsi_.component(2)*k_);
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
 	
-	Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
+    Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max Production: " << gMax(G) <<endl;
     Info<< "Max 3D Production: " << gMax(tpProd3d_) << " Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
 

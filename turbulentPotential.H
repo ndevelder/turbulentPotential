@@ -135,27 +135,20 @@ class turbulentPotential
             volScalarField tpphi_;
             volScalarField tpphisqrt_;
             volVectorField vorticity_;
-			volVectorField phis_;
-            volVectorField vorticityTmp_;
-            volVectorField ivorticity_;
             volVectorField tppsi_;
             volTensorField uGrad_;
             volScalarField epsHat_;
-	    volScalarField kol_;
-	    volScalarField kSafe_;
-	    volScalarField kSqrt_;
-	    volVectorField gradkSqrt_;
-	    volScalarField nutSafe_;
-	    volScalarField epsilonSafe_;
-	    volScalarField sigmaK_;
-	    volScalarField sigmaEps_;
-	    volScalarField sigmaPhi_;
-	    volScalarField sigmaPsi_;
-	    volScalarField cEp2_;
-	    volScalarField tpProd_;
-	    volScalarField cP1eqn_;
-	    volScalarField dimRat_;
-	    volVectorField gradTpphi_;
+			volScalarField kSqrt_;
+			volVectorField gradkSqrt_;
+			volScalarField sigmaK_;
+			volScalarField sigmaEps_;
+			volScalarField sigmaPhi_;
+			volScalarField sigmaPsi_;
+			volScalarField cEp2_;
+			volScalarField tpProd_;
+			volScalarField cP1eqn_;
+			volScalarField dimRat_;
+			volVectorField gradTpphi_;
             volTensorField gradTppsi_;
             volScalarField tpProdSqr_;
             volScalarField tpProd3d_;
@@ -206,34 +199,6 @@ public:
             return nut_;
         }
 
-        //- Return phiS
-        tmp<volSymmTensorField> phiS() const
-        {
-            return tmp<volSymmTensorField>
-            (
-                new volSymmTensorField("phiS", tpphi_*symm(uGrad_))
-            );
-        }
-		
-	//- Return divergence of phiS
-        tmp<volVectorField> divphiS() const
-        {
-            return tmp<volVectorField>
-            (
-                new volVectorField("divphiS", fvc::div(phiS()))
-            );
-        }
-		
-	//- Return s
-        tmp<volVectorField> sreal() const
-        {
-            return tmp<volVectorField>
-            (
-                new volVectorField("sreal", phis_/(tpphi_*k_))
-            );
-        }
-
-
         //- Return the phi/k
         tmp<volScalarField> PhiOverK() const
         {
@@ -276,7 +241,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("reTau", k_*k_/(nu()*(epsilon_ + epsilonSmall_)))
+                new volScalarField("reTau", (k_*k_ + k0_*k0_)/(nu()*(epsilon_ + epsilonSmall_)))
             );
         }
 
@@ -312,6 +277,15 @@ public:
                 return cEp2_;
         }
 
+		//- Return the effective diffusivity for epsilon
+        tmp<volScalarField> nuEff() const
+        {
+            return tmp<volScalarField>
+            (
+                new volScalarField("nuEff", nut() + nu())
+            );
+        }
+		
         //- Return the effective diffusivity for k
         tmp<volScalarField> DkEff() const
         {
@@ -400,6 +374,12 @@ public:
         virtual tmp<volScalarField> phiReal() const
         {
             return tpphi_*k_;
+        }
+		
+		//- Return the turbulence kinetic energy
+        virtual tmp<volVectorField> U() const
+        {
+            return U_;
         }
 
         //- Return the Reynolds stress tensor
