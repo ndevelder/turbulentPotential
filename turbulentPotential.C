@@ -975,11 +975,7 @@ void turbulentPotential::correct()
         cEp2_ =  cEp2con_;
     }
 
-    cP1eqn_ = 2.0*(0.4+0.6*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
-	
-
-
-
+    
     //*************************************//
     //Dissipation equation
     //*************************************//
@@ -1047,6 +1043,7 @@ void turbulentPotential::correct()
 	//label patchID2 = mesh_.boundaryMesh().findPatchID("WALL_BOTTOM"); 
     //Info<< k_.boundaryField()[patchID2] << endl;	
 	
+	cP1eqn_ = 2.0*(0.4+0.6*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
 	
 	//*************************************//	
     // Production Update
@@ -1078,7 +1075,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
 	  //Pressure Strain
-        2.0*nutFrac()*(2*Alpha()-(cP1eqn_/3.0))*tpphi_/TsEh()
+        cP1eqn_*nutFrac()*(2*Alpha()-(cP1eqn_/3.0))*tpphi_/TsEh()
       + 0.6*GdK*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
