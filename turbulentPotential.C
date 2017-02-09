@@ -1075,7 +1075,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
 	  //Pressure Strain
-        cP1eqn_*nutFrac()*(2*Alpha()-(cP1eqn_/3.0))*tpphi_/TsEh()
+        2.0*nutFrac()*(2*Alpha()-(2.0/3.0))*tpphi_/TsEh()
       + 0.6*GdK*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
