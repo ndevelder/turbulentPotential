@@ -81,6 +81,8 @@ class turbulentPotential
             dimensionedScalar cEp3_;
             dimensionedScalar cD1_;
             dimensionedScalar cD2_;
+            dimensionedScalar cD3_;
+            dimensionedScalar cD4_;
             dimensionedScalar cVv1_;
             dimensionedScalar cTv1_;
             dimensionedScalar cP1_;
@@ -95,6 +97,8 @@ class turbulentPotential
             dimensionedScalar cEhm_;
             dimensionedScalar cEhR_;
 			dimensionedScalar cNF_;
+			dimensionedScalar rS_;
+			dimensionedScalar pMix_;
             dimensionedScalar sigmaKInit_;
             dimensionedScalar sigmaEpsInit_;
             dimensionedScalar sigmaEpsVisc_;
