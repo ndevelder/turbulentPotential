@@ -99,6 +99,7 @@ class turbulentPotential
 			dimensionedScalar cNF_;
 			dimensionedScalar rS_;
 			dimensionedScalar pMix_;
+			dimensionedScalar nutRatMax_;
             dimensionedScalar sigmaKInit_;
             dimensionedScalar sigmaEpsInit_;
             dimensionedScalar sigmaEpsVisc_;
@@ -169,7 +170,7 @@ class turbulentPotential
     tmp<volScalarField> Ts() const;
     
     //- Return time scale, TsEh using epsHat
-    tmp<volScalarField> TsEh() const;
+    //tmp<volScalarField> TsEh() const;
 
 
 public:
