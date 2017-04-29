@@ -131,7 +131,7 @@ turbulentPotential::turbulentPotential
         (
             "cD4",
        	    coeffDict_,
-            0.63
+            1.12
         )
     ),
     cVv1_
@@ -249,6 +249,15 @@ turbulentPotential::turbulentPotential
             "cEhmP",
             coeffDict_,
             0.67
+        )
+    ),
+    cEhmPK_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "cEhmPK",
+            coeffDict_,
+            0.052
         )
     ),
     cEhR_
@@ -828,6 +837,11 @@ turbulentPotential::turbulentPotential
         epsHat_ = (1.0/(1.0 + (cEhmM_*nu()*mag(gradkSqrt_)/(k_+k0_))))/Ts();
         bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
+	else if(eqnEpsHat_ == "pk")
+	{
+        epsHat_ = epsilon_/(k_ + (cEhmPK_*nu()*mag(gradk_)/(tpphi_*kSqrt_)));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
+	}
 	else if(eqnEpsHat_ == "phi")
 	{		
 		volVectorField gradphiSqrt("gradphiSqrt", fvc::grad(sqrt(tpphi_*k_))) ;
@@ -935,6 +949,8 @@ bool turbulentPotential::read()
 		cPr_.readIfPresent(coeffDict());
 		cD1_.readIfPresent(coeffDict());
 		cD2_.readIfPresent(coeffDict());
+		cD3_.readIfPresent(coeffDict());
+		cD4_.readIfPresent(coeffDict());
         cVv1_.readIfPresent(coeffDict());
         cTv1_.readIfPresent(coeffDict());
 		cT_.readIfPresent(coeffDict());
@@ -1160,6 +1176,11 @@ void turbulentPotential::correct()
         epsHat_ = (1.0/(1.0 + (cEhmM_*nu()*mag(gradkSqrt_)/(k_+k0_))))/Ts();
         bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
+	else if(eqnEpsHat_ == "pk")
+	{
+        epsHat_ = epsilon_/(k_ + (cEhmPK_*nu()*mag(gradk_)/(tpphi_*kSqrt_)));
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
+	}
 	else if(eqnEpsHat_ == "phi")
 	{		
 		volVectorField gradphiSqrt("gradphiSqrt", fvc::grad(sqrt(tpphi_*k_))) ;
@@ -1207,10 +1228,10 @@ void turbulentPotential::correct()
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation
-      + fvm::Sp(cD2_*(1.0-2.0*alpha_)*epsHat_,tpphi_)
+      + fvm::Sp((1.0-2.0*alpha_)*epsHat_,tpphi_)
 	  // Pressure diffusion 
 	  + (cP2_ + cP4_)*((tppsi_ & tppsi_)/((((nu()/1000.0)+nut_)/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
-	  - fvm::Sp(cD2_*tpProd_,tpphi_) 
+	  - fvm::Sp(cD4_*tpProd_,tpphi_) 
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
 	  - fvm::SuSp((cTv1_*nut_)*(gradk_ & gradTpphi_)/(tpphi_*k_ + k0_),tpphi_)
@@ -1247,12 +1268,12 @@ void turbulentPotential::correct()
 	  // Production and pressure strain
       - fvm::Sp((1.0 - cP2_)*tpProd_,tppsi_)
       + (1.0 - cP2_)*tpphi_*vorticity_
-      - fvm::Sp(cD3_*alpha_*tpProd_,tppsi_)
-      - fvm::Sp((cP1_*(1.0-alpha_))*epsHat_,tppsi_)
+      - fvm::Sp(cD2_*alpha_*tpProd_,tppsi_)
+      - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
-	  - fvm::Sp(cD4_*alpha_*epsHat_,tppsi_)
-	  + cD4_*alpha_*tpphi_*vorticity_
+	  - fvm::Sp(cD3_*alpha_*epsHat_,tppsi_)
+	  + cMu_*alpha_*tpphi_*vorticity_
 	  
 	  // Gradients
       + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
@@ -1284,6 +1305,10 @@ void turbulentPotential::correct()
 		{
             if(nutType_ == "strain"){
 				nut_ = 0.09*k_*Ts();
+			}else if(nutType_ == "ruu"){
+				nut_ = 0.33*alpha_*(tpphi_*k_)*Ts();
+			}else if(nutType_ == "fmu"){
+				nut_ = cMu_*(0.79 + 0.21*(G/epsilon_))*k_*tpphi_*Ts();	
 			}else{
 				nut_ = cMu_*k_*tpphi_*Ts();	
 			}
