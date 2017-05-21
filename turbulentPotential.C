@@ -1027,7 +1027,7 @@ void turbulentPotential::correct()
 		tpProd_ = G/(k_ + k0_);
 		GdK = G/(k_ + k0_);
 	} else if(prodType_ == "mixed"){
-		Info<< "Using mixed production term" <<endl;
+		Info<< "Using mixed production term" <<endl; 
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + (1.0-alpha_)*cPr_*tpphi_*mag(symm(fvc::grad(U_)));
 		G = tpProd_*k_;
 		GdK = tpProd_;	
@@ -1035,7 +1035,12 @@ void turbulentPotential::correct()
 		Info<< "Using mixed 2 production term" <<endl;
 		tpProd_ = pMix_*(2*alpha_ - 1.0)*mag(tppsi_ & vorticity_) + (2.0 - pMix_)*cPr_*alpha_*tpphi_*mag(symm(fvc::grad(U_)));
 		G = tpProd_*k_;
-		GdK = tpProd_;			
+		GdK = tpProd_;
+	} else if(prodType_ == "mixed3"){
+		Info<< "Using mixed 3 production term" <<endl;
+		tpProd_ = alpha_*(tppsi_ & vorticity_) + 0.33*(1.0-alpha_)*0.41*alpha_*mag(symm(fvc::grad(U_))) + 0.67*(1.0 - alpha_)*tpphi_*mag(symm(fvc::grad(U_)));
+		G = tpProd_*k_;
+		GdK = tpProd_;		
 	} else if(prodType_ == "rough"){
 		Info<< "Using rough production term" <<endl;
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + rPr_*(2*alpha_-1.0)*mag(tppsi_ & vorticity_) + (1.0-alpha_)*cPr_*alpha_*tpphi_*mag(symm(fvc::grad(U_)));
@@ -1222,16 +1227,16 @@ void turbulentPotential::correct()
       + fvm::SuSp(-fvc::div(phi_), tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
-        cPphi_*(2*alpha_-1.0)*tpphi_*epsHat_
-      + cD1_*(1.0 - alpha_)*tpphi_*epsHat_
+        cPphi_*nutFrac()*(2*alpha_-1.0)*tpphi_*epsHat_
+      + cD1_*(1.0-alpha_)*GdK*tpphi_
 	  + cP2_*GdK*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation
-      + fvm::Sp((1.0-2.0*alpha_)*epsHat_,tpphi_)
+      - fvm::Sp(1.21*(2.0*alpha_-1.0)*epsHat_,tpphi_)
 	  // Pressure diffusion 
-	  + (cP2_ + cP4_)*((tppsi_ & tppsi_)/((((nu()/1000.0)+nut_)/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
-	  - fvm::Sp(cD4_*tpProd_,tpphi_) 
+	  + (cP2_ + cP4_)*alpha_*((tppsi_ & tppsi_)/((((nu()/1000.0)+nut_)/(k_+k0_))*(1.0+cPw_/reTau())))*tpphi_
+	  - fvm::Sp(cD4_*alpha_*GdK,tpphi_) 
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
 	  - fvm::SuSp((cTv1_*nut_)*(gradk_ & gradTpphi_)/(tpphi_*k_ + k0_),tpphi_)
@@ -1272,8 +1277,8 @@ void turbulentPotential::correct()
       - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
-	  - fvm::Sp(cD3_*alpha_*epsHat_,tppsi_)
-	  + cMu_*alpha_*tpphi_*vorticity_
+	  + (1.0 - alpha_)*epsHat_*tppsi_
+	  + cD3_*(2*alpha_-1.0)*tpphi_*vorticity_
 	  
 	  // Gradients
       + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
