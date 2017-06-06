@@ -97,6 +97,7 @@ class turbulentPotential
             dimensionedScalar cEhmM_;
             dimensionedScalar cEhmP_;
 			dimensionedScalar cEhmPK_;
+			dimensionedScalar cEhmPK2_;
             dimensionedScalar cEhR_;
 			dimensionedScalar cNF_;
 			dimensionedScalar rS_;
@@ -147,6 +148,7 @@ class turbulentPotential
             volTensorField uGrad_;
             volScalarField epsHat_;
 			volScalarField kSqrt_;
+			volScalarField phiSqrt_;
 			volVectorField gradkSqrt_;
 			volScalarField sigmaK_;
 			volScalarField sigmaEps_;
