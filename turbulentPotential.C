@@ -1271,17 +1271,17 @@ void turbulentPotential::correct()
       ==
       // cP2_*(1.0 - alpha_)*epsHat_*(ruuModel/(k_+k0_))
 	    cPphi_*(2.0*alpha_-1.0)*epsHat_*tpphi_
-	  + cP2_*(1.0-alpha_)*GdK*tpphi_
+	  + cD1_*(1.0-alpha_)*GdK*tpphi_
 	  //+ cD1_*alpha_*epsHat_*tpphi_
 	  + cP2_*GdK*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation 
-      - fvm::Sp((2.0*alpha_-1.0)*epsHat_,tpphi_)
+      - fvm::Sp((2.0*alpha_-1.0)*(epsHat_),tpphi_)
 	  // Pressure diffusion 
 	  //+ alpha_*tpphi_*((tppsi_ - nut_*vorticity_/k_) & gradPhi_)/(0.5*0.09*kSqrt_ + sqrt(k0_))	
-	  - fvm::Sp(cD1_*(psiReal() & gradPhi_)/(k_*kSqrt_ + k0_*sqrt(k0_)),tpphi_) 
-	  - fvm::Sp((sigmaPhi_/cD4_)*alpha_*(gradPhiSqrt_ & gradPhiSqrt_)/epsHat_,tpphi_)
+	  //- fvm::Sp(cD1_*(psiReal() & gradPhi_)/(k_*kSqrt_ + k0_*sqrt(k0_)),tpphi_) 
+	  - fvm::Sp((0.5 + cD4_*sigmaPhi_)*(gradPhiSqrt_ & gradPhiSqrt_)/epsHat_,tpphi_)
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
 	  - fvm::SuSp((cTv1_*nut_)*(gradk_ & gradTpphi_)/(tpphi_*k_ + k0_),tpphi_)
@@ -1322,7 +1322,7 @@ void turbulentPotential::correct()
       - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
-	  + (1.0 - alpha_)*(epsilon_/(k_+k0_))*tppsi_
+	  + (1.0 - alpha_)*(epsHat_)*tppsi_
 	  + cD3_*(2*alpha_-1.0)*tpphi_*vorticity_
 	  
 	  // Gradients
