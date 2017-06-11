@@ -1073,7 +1073,7 @@ void turbulentPotential::correct()
 		GdK = tpProd_;
 	} else if(prodType_ == "mixed3"){
 		Info<< "Using mixed 3 production term" <<endl;
-		tpProd_ = alpha_*(tppsi_ & vorticity_) + 0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))) + 0.67*(1.0 - alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_)));
+		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + 0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))) + 0.67*(1.0 - alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_)));
 		G = tpProd_*k_;
 		GdK = tpProd_;
         Info << "Max difference m3-psV: " << max(G - ((tppsi_ & vorticity_)*k_)) << endl;		
