@@ -1076,7 +1076,10 @@ void turbulentPotential::correct()
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + 0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))) + 0.67*(1.0 - alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_)));
 		G = tpProd_*k_;
 		GdK = tpProd_;
-        Info << "Max difference m3-psV: " << max(G - ((tppsi_ & vorticity_)*k_)) << endl;		
+        Info << "Max difference m3-psV: " << max(G - ((tppsi_ & vorticity_)*k_)) << endl;	
+		Info << "Min 1: " << min(alpha_*mag(tppsi_ & vorticity_)) << endl; 
+		Info << "Min 2: " << min(0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_)))) << endl;
+		Info << "Min 3: " << min(0.67*(1.0-alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_)))) << endl;
 	} else if(prodType_ == "rough"){
 		Info<< "Using rough production term" <<endl;
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + rPr_*(2*alpha_-1.0)*mag(tppsi_ & vorticity_) + (1.0-alpha_)*cPr_*alpha_*tpphi_*mag(symm(fvc::grad(U_)));
