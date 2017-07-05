@@ -302,7 +302,25 @@ turbulentPotential::turbulentPotential
         (
             "pMix",
             coeffDict_,
-            0.5
+            0.33
+        )
+    ),
+	cPrK_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "cPrK",
+            coeffDict_,
+            0.67
+        )
+    ),
+	cPrP_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "cPrP",
+            coeffDict_,
+            0.83
         )
     ),
 	rPr_
@@ -1068,16 +1086,17 @@ void turbulentPotential::correct()
 		GdK = tpProd_;	
 	} else if(prodType_ == "mixed2"){
 		Info<< "Using mixed 2 production term" <<endl;
-		tpProd_ = pMix_*(2*alpha_ - 1.0)*mag(tppsi_ & vorticity_) + (2.0 - pMix_)*cPr_*alpha_*tpphi_*mag(symm(fvc::grad(U_)));
+		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + (1.0-alpha_)*cPrP_*tpphi_*mag(symm(fvc::grad(U_)));
 		G = tpProd_*k_;
 		GdK = tpProd_;
 	} else if(prodType_ == "mixed3"){
 		Info<< "Using mixed 3 production term" <<endl;
-		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + 0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))) + 0.67*(1.0 - alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_)));
+		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + pMix_*(1.0-alpha_)*cPrK_*alpha_*mag(symm(fvc::grad(U_))) + (1.0 - pMix_)*(1.0 - alpha_)*cPrP_*tpphi_*mag(symm(fvc::grad(U_)));
 		G = tpProd_*k_;
 		GdK = tpProd_;
 
-        Info << "Max difference m3-psV: " << max(G - ((tppsi_ & vorticity_)*k_)) << endl;	
+		volScalarField pD("pD",G - (mag(tppsi_ & vorticity_)*k_));
+        Info << "Max difference m3-psV: " << gMax(pD) << endl;	
 
 		volScalarField p1("p1",alpha_*mag(tppsi_ & vorticity_));
 		volScalarField p2("p2",0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))));
@@ -1111,22 +1130,22 @@ void turbulentPotential::correct()
     
     if(eqnSigmaK_ == "true")
     {
-	    sigmaK_ = 0.67 + 0.33*(tpProd_/epsHat_);
+	    sigmaK_ = 0.67 + 0.33*(G/(epsilon_ + epsilonSmall_));
 	}
 
     if(eqnSigmaEps_ == "true")
     {
-	    sigmaEps_ = 0.33 + 0.5*(tpProd_/epsHat_);
+	    sigmaEps_ = 0.33 + 0.5*(G/(epsilon_ + epsilonSmall_));
     }
 
     if(eqnSigmaPhi_ == "true")
     {
-	    sigmaPhi_ = 0.21 + 0.12*(tpProd_/epsHat_);
+	    sigmaPhi_ = 0.21 + 0.12*(G/(epsilon_ + epsilonSmall_));
 	}
 
     if(eqnSigmaPsi_ == "true")
     {
-	    sigmaEps_ = 0.33 + 0.4*(tpProd_/epsHat_);
+	    sigmaEps_ = 0.33 + 0.4*(G/(epsilon_ + epsilonSmall_));
     }
 
     if(eqncEp2_ == "true")

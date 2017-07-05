@@ -102,6 +102,8 @@ class turbulentPotential
 			dimensionedScalar cNF_;
 			dimensionedScalar rS_;
 			dimensionedScalar pMix_;
+			dimensionedScalar cPrK_;
+			dimensionedScalar cPrP_;
 			dimensionedScalar rPr_;
 			dimensionedScalar nutRatMax_;
             dimensionedScalar sigmaKInit_;
