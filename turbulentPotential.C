@@ -1327,9 +1327,12 @@ void turbulentPotential::correct()
 
 	// Re-calculate phi/k gradient
     gradTpphi_ = fvc::grad(tpphi_);
+	
+	Info << "About to take phi sqrt" << endl;
+	
     phiSqrt_ = sqrt(tpphi_*k_);
 
-
+	Info << "About to solve tppsi" << endl;
 	
     //*************************************//   
     // Psi Equation
