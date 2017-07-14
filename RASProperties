@@ -1,0 +1,84 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM Extend Project: Open Source CFD        |
+|  \\    /   O peration     | Version:  1.6-ext                               |
+|   \\  /    A nd           | Web:      www.extend-project.de                 |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      RASProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+RASModel            turbulentPotential;
+
+turbulence          on;
+
+printCoeffs         on;
+
+turbulentPotentialCoeffs{
+
+   solveK              true;
+   solveEps            true;
+   solvePsi            true;
+   solvePhi            true;
+   solveNut            true;
+   timeScaleEps        epsilon;
+   prodType            mixed3;
+   pMix  			   0.4;
+   eqnSigmaK           false;
+   eqnSigmaEps         false;
+   eqnSigmaPhi         false;
+   eqnSigmaPsi         false;
+   eqncEp2             false;
+   eqncMu 	           false;
+   eqnEpsHat           pk;
+   nutType             phi;
+   sigmaKInit          1.2; 
+   sigmaEpsInit        0.83;
+   sigmaEpsVisc        1.0;
+   sigmaPhiInit        0.41;
+   sigmaPsiInit        1.2;
+   psiNuFrac           1.0;
+   phiNuFrac           1.0;
+   phiV1               0.0;
+   cT                  0.0;
+   cD1                 0.53;
+   cD2                 2.2;
+   cD3				   0.12;
+   cD4				   0.33;
+   cPphi               1.83;
+   cP1                 1.83; 
+   cP2                 0.6;
+   cP3                 0.12;
+   cP4                 0.85714;
+   cEp1                1.45;
+   cEp2con			   1.83;
+   cMu                 0.21;
+   cPr                 1.0;
+   cPrK				   0.6;
+   cPrP				   1.0;
+   cEhr                0.0019;
+   cVv1                0.0;
+   cTv1                0.0;
+   debugWrite          false;
+   tslimiter           false;
+   psiProd             psi;
+   gT1                 0.0;
+   gT2                 0.0;
+   gT3                 0.0;
+   cEhmP               0.79;
+   cEhmM			   10.0;
+   cEhmPK			   0.08;
+   cEhmPK2			   0.67;
+   cNF                 0.0;
+   cPw                 25;
+   nutRatMax 		   1e5;
+}
+
+// ************************************************************************* //
+
