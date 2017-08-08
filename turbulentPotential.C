@@ -1095,17 +1095,18 @@ void turbulentPotential::correct()
 		G = tpProd_*k_;
 		GdK = tpProd_;
 
-		volScalarField pD("pD",G - (mag(tppsi_ & vorticity_)*k_));
-        Info << "Max difference m3-psV: " << gMax(pD) << endl;	
+		//volScalarField pD("pD",G - (mag(tppsi_ & vorticity_)*k_));
+        //Info << "Max difference m3-psV: " << gMax(pD) << endl;	
 
-		volScalarField p1("p1",alpha_*mag(tppsi_ & vorticity_));
-		volScalarField p2("p2",0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))));
-		volScalarField p3("p3",0.67*(1.0-alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_))));
+		//volScalarField p1("p1",alpha_*mag(tppsi_ & vorticity_));
+		//volScalarField p2("p2",0.33*(1.0-alpha_)*0.41*alpha_*sqrt(2.0)*mag(symm(fvc::grad(U_))));
+		//volScalarField p3("p3",0.67*(1.0-alpha_)*tpphi_*sqrt(2.0)*mag(symm(fvc::grad(U_))));
 		
-		Info << "Min 1: " << gMin(p1) << endl; 
-		Info << "Min 2: " << gMin(p2) << endl;
-		Info << "Min 3: " << gMin(p3) << endl;
-		Info << "Min G: " << gMin(G) << endl;
+		//Info << "Min 1: " << gMin(p1) << endl; 
+		//Info << "Min 2: " << gMin(p2) << endl;
+		//Info << "Min 3: " << gMin(p3) << endl;
+		//Info << "Min G: " << gMin(G) << endl;
+		
 	} else if(prodType_ == "rough"){
 		Info<< "Using rough production term" <<endl;
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + rPr_*(2*alpha_-1.0)*mag(tppsi_ & vorticity_) + (1.0-alpha_)*cPr_*alpha_*tpphi_*mag(symm(fvc::grad(U_)));
@@ -1307,9 +1308,7 @@ void turbulentPotential::correct()
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation 
       - fvm::Sp((2.0*alpha_-1.0)*(epsHat_),tpphi_)
-	  // Pressure diffusion 
-	  //+ alpha_*tpphi_*((tppsi_ - nut_*vorticity_/k_) & gradPhi_)/(0.5*0.09*kSqrt_ + sqrt(k0_))	
-	  //- fvm::Sp(cD1_*(psiReal() & gradPhi_)/(k_*kSqrt_ + k0_*sqrt(k0_)),tpphi_) 
+	  // Pressure diffusion  
 	  - fvm::Sp((0.5 + cD4_*sigmaPhi_)*(gradPhiSqrt_ & gradPhiSqrt_)/epsHat_,tpphi_)
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
@@ -1327,12 +1326,10 @@ void turbulentPotential::correct()
 
 	// Re-calculate phi/k gradient
     gradTpphi_ = fvc::grad(tpphi_);
-	
-	Info << "About to take phi sqrt" << endl;
-	
     phiSqrt_ = sqrt(tpphi_*k_);
-
-	Info << "About to solve tppsi" << endl;
+	
+	
+	
 	
     //*************************************//   
     // Psi Equation
@@ -1419,46 +1416,8 @@ void turbulentPotential::correct()
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
 	
 	if(runTime_.outputTime())
-	{   
-		 volScalarField phiPstrain("phiPstrain", cP2_*(1.0 - alpha_)*epsHat_*(ruuModel/(k_+k0_)) + cP2_*GdK*tpphi_);
-		 phiPstrain.write();
-
-		 volScalarField phiDiss1("phiDiss1", -1.0*GdK*tpphi_ );
-		 phiDiss1.write();
-		
-		 volScalarField phiDiss2("phiDiss2", -1.0*(2.0*alpha_-1.0)*epsHat_*tpphi_ );
-		 phiDiss2.write();
-		
-		//volScalarField phiPdiff("phiPdiff", alpha_*tpphi_*((tppsi_ - nut_*vorticity_/k_) & gradPhi_)/(0.5*0.09*kSqrt_ + sqrt(k0_)));
-		//phiPdiff.write();
-		
-		// volScalarField phiGradterm("phiGradterm", (cVv1_*nu())*(gradkSqrt_ & gradTpphi_)/(kSqrt_ + sqrt(k0_)) );
-		// phiGradterm.write();
-		
-		volScalarField phiViscTransport("phiViscTransport", fvc::laplacian(nu(), tpphi_) + (2.0*nu())*(gradk_ & gradTpphi_)/(k_+k0_) );
-		phiViscTransport.write();	
-
-		volScalarField phiTurbTransport("phiTurbTransport", fvc::laplacian(sigmaPhi_*nut_, tpphi_) ); 
-		phiTurbTransport.write();	
-
-        volScalarField psiProd("psiProd", mag(tppsi_ & vorticity_)*k_);
-        psiProd.write();	
-		
-        //volScalarField sProd("sProd", (1.0-alpha_)*cPr_*alpha_*tpphi_*mag(symm(fvc::grad(U_)))*k_ );
-        //sProd.write();	
-		
-		phiActual.write();
-		
-		psiActual.write();
-		
-		alpha_.write();
-		
-		ruuModel.write();
-		
-		G.write();
-		
-
-        		
+	{   		
+		alpha_.write();		       		
 	}
 	
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
