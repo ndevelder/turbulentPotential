@@ -1,0 +1,107 @@
+\small
+
+\begin{equation}
+\dfrac{Dk}{Dt} = \nabla \cdot (\nu + \nu_{t} \bar{\sigma_{k}})\nabla k + P - \varepsilon
+\end{equation}
+
+\begin{equation}
+\dfrac{D\epsilon}{Dt} = \nabla \cdot (\nu + \nu_{t} \bar{\sigma_{\epsilon}})\nabla \varepsilon + \dfrac{\hat{\varepsilon}}{k}(C_{\epsilon 1} P - C_{\epsilon 2} \varepsilon) 
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+\dfrac{D(\phi/k)}{Dt} = 
+\bigg[ \nabla \cdot (\nu + \nu_{t} \bar{\sigma_{\phi}})\nabla (\phi/k) 
++ (2\nu) \nabla \textsurd k \cdot \nabla(\phi / k)/\textsurd k \bigg]
++ C_{p1} (2\alpha - 1) \dfrac{\hat{\varepsilon}}{k}(\phi/k) \\
++   C_{p2} \dfrac{P}{k}(\phi/k)  +   0.53 (1-\alpha) \dfrac{P}{k}(\phi/k) 
+- \bigg[  (2\alpha - 1) \dfrac{\hat{\varepsilon}}{k}(\phi/k)  + (2\nu) \nabla \textsurd k \cdot \nabla(\phi / k)/\textsurd k \bigg]   \\
+- (\phi/k) \dfrac{P}{k}
+- (0.5 + 0.33\sigma_{\phi}) (\phi/k) (\nabla \phi^{1/2} \cdot \nabla \phi^{1/2}) k / \hat{\varepsilon}
++ C_{T}\sqrt{\dfrac{\nu_{t}}{\nu}} \dfrac{P}{k}
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+\dfrac{D(\psi/k)}{Dt} = \bigg[ \nabla \cdot (\nu + \nu_{t} \bar{\sigma_{\psi}})\nabla (\psi/k) 
++ (2\nu) \nabla \textsurd k \cdot \nabla(\psi / k)/\textsurd k \bigg] 
++ \bigg[ \dfrac{\phi}{k}\omega - \dfrac{P}{k}(\psi/k) \bigg] \\
++ \bigg[ C_{p2}\dfrac{P}{k}(\psi/k)  
+- C_{p2}\dfrac{\phi}{k}\omega 
+- 2.2 \alpha \dfrac{P}{k}(\psi/k) 
+- C_{p1} \dfrac{\hat{\varepsilon}}{k} (1-\alpha) (\psi/k) \bigg] \\
++ \bigg[ C_{\mu}(2\alpha - 1)\dfrac{\phi}{k}\omega + (1-\alpha)\dfrac{\varepsilon}{k}(\psi/k) 
+- (2\nu) \nabla \textsurd k \cdot \nabla(\psi / k)/\textsurd k \bigg]
++ C_{T}\sqrt{\dfrac{\nu_{t}}{\nu}}\omega \\
+\end{aligned}
+\end{equation}
+
+\begin{equation*}
+P =  \alpha \psi \cdot \omega + 0.4 (1-\alpha) 0.6 \alpha k |S|  + 0.6 (1-\alpha) \phi |S|
+\end{equation*}
+\begin{equation*}
+\hat{\varepsilon} = \varepsilon / (1 + \beta_{k} \nu \dfrac{ \lvert \nabla k \rvert }{ \phi \sqrt{k} } )
+\end{equation*}
+\begin{equation*}
+\nu_{t} = C_{\mu} \dfrac{\phi k}{\hat{\varepsilon}}  \hspace{2cm} \alpha = (1 + 1.5 \dfrac{\phi}{k})^{-1}
+\end{equation*}
+
+
+\vspace{1cm}
+
+Where model constants are: 
+\begin{equation*}
+\bar{\sigma_{k}} = 1.2, \;\; \bar{\sigma_{\epsilon}} = 0.83 \;\; \bar{\sigma_{\phi}} = 0.4 \;\; \bar{\sigma_{\psi}} = 1.2
+\end{equation*}
+\begin{equation*}
+C_{\mu} = 0.21, \;\;\;\; C_{p1} = 1.83,  \;\;\;\; C_{p2} = \dfrac{3}{5}, \;\;\;\; C_{p3} = 0.12
+\end{equation*}
+\begin{equation*}
+C_{\epsilon 1} = 1.45, \;\; C_{\epsilon 2} = 1.83, \;\; C_{\epsilon 3} = 0.15, \;\;\;\;\;\; C_{pr} = 1.0, \;\;\;\;\;\; \beta_{k} = 0.09
+\end{equation*}
+\begin{equation*}
+S = \dfrac{1}{2}(\nabla U + \nabla U^{T})
+\end{equation*}
+
+
+\normalsize
+
+\cleardoublepage
+
+\small
+
+\begin{equation*}
+k_{w} =  min(1,r^{+}/90) \dfrac{{u_{\tau}}^{2}}{{\beta_{k}}^{1/2}}
+\end{equation*}
+
+\begin{equation*}
+\varepsilon_{w} =  \bigg(  0.229 {u_{\tau}}^{2} (5/r^{+})^{2}  + |\psi| \bigg) \dfrac{{u_{\tau}}^{2}}{\nu_{eff}}
+\end{equation*}
+
+
+\begin{equation*}
+\phi_{w} =  f_{\phi r}(r^{+}) k_{w}
+\end{equation*}
+
+
+\begin{equation*}
+\psi_{w} =  {\nu_{t}}_{w} \omega_{w}
+\end{equation*}
+
+
+\begin{equation*}
+{\nu_{t}}_{w} = C_{\mu} \dfrac{{\phi}_{w} k_{w}}{\varepsilon_{w}}
+\end{equation*}
+
+
+\begin{equation*}
+f_{\phi r}=
+\begin{cases}
+r^{+} < 5, \;\;\;\; 0\\
+r^{+} > 5 \;\;and\;\; r^{+} < 45, \;\;\;\; 0.12 { \bigg( \dfrac{r^{+}}{45} \bigg) }^2 - 0.0014(1- (\dfrac{r^{+}}{45}))\\
+r^{+} > 45 \;\;and\;\; r^{+} < 90, \;\;\;\; 0.015(r^{+} - 45)/45 + 0.12 \\
+r^{+} > 90, \;\;\;\; 0.135
+\end{cases}
+\end{equation*}
+
