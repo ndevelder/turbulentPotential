@@ -150,6 +150,7 @@ class turbulentPotential
             volTensorField uGrad_;
             volScalarField epsHat_;
 			volScalarField kSqrt_;
+			volScalarField alpha_;
 			volScalarField phiSqrt_;
 			volVectorField gradkSqrt_;
 			volScalarField sigmaK_;
@@ -261,7 +262,7 @@ public:
         //- Return the epsilon hat
         tmp<volScalarField> EpsHat() const
         {
-            return epsHat_;
+				return epsHat_;
         }
 
         //- Return the nut fraction
@@ -277,10 +278,7 @@ public:
         //- Return Alpha
         tmp<volScalarField> Alpha() const
         {
-            return tmp<volScalarField>
-            (
-                new volScalarField("Alpha", 1.0/(1.0 + 1.5*PhiOverK()))
-            );
+				return alpha_;
         }
 
         //- Return cEp2

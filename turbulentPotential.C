@@ -656,6 +656,19 @@ turbulentPotential::turbulentPotential
         (sqrt(k_))
     ),
 	
+	alpha_
+    (
+        IOobject
+        (
+            "alpha",
+            runTime_.timeName(),
+            U_.db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        (1.0/(1.0 + 1.5*tpphi_))
+    ),
+	
 	phiSqrt_
     (
         IOobject
@@ -1051,14 +1064,10 @@ void turbulentPotential::correct()
 	
 	
 	//*************************************//	
-    // Alpha 
+    // Gradient Terms
     //*************************************//
-	
-	volScalarField alpha_("alpha", 1.0/(1.0 + 1.5*tpphi_));
-	
 
 	volVectorField gradPhiSqrt_("gradPhiSqrt",fvc::grad(phiSqrt_));
-	
 	volVectorField gradPhi_("gradPhi", fvc::grad(phiReal()));		
 	volScalarField gradgradPhi_("gradgradPhi", fvc::laplacian(DphiEff(),phiReal()));
 
@@ -1414,11 +1423,6 @@ void turbulentPotential::correct()
     volScalarField phiActual("phiActual",tpphi_*k_);
 	volScalarField psiActual("psiZ",tppsi_.component(2)*k_);
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
-	
-	if(runTime_.outputTime())
-	{   		
-		alpha_.write();		       		
-	}
 	
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max Production: " << gMax(G) <<endl;
