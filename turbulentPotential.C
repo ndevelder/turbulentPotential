@@ -1258,7 +1258,7 @@ void turbulentPotential::correct()
 	}
 	else if(eqnEpsHat_ == "pk")
 	{
-        epsHat_ = epsilon_/(k_ + (cEhmPK_*nu()*mag(gradk_)/(tpphi_*kSqrt_ + sqrt(k0_))));
+        epsHat_ = epsilon_/(k_ + (2.0*cEhmPK_*nu()*mag(gradkSqrt_)/(tpphi_ + SMALL)));
         bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
 	else if(eqnEpsHat_ == "pk2")
