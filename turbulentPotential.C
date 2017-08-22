@@ -1415,11 +1415,14 @@ void turbulentPotential::correct()
 
       ==
 
-	  // Production and pressure strain
+	  // Production
+	    (1.0-cP2_)*tpphi_*vorticity_
       - fvm::Sp(tpProd_,tppsi_)
+	  
+	  // Pressure strain
 	  + cP2_*(tppsi_ & vorticity_)*tppsi_
-      + (1.0 - cP2_)*tpphi_*vorticity_
       - fvm::Sp(cD2_*alpha_*(tppsi_ & vorticity_),tppsi_)
+	  //- fvm::Sp(cD2_*cP1_*(2.0*alpha_-1.0)*epsHat_,tppsi_)
       - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
