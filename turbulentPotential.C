@@ -1363,7 +1363,8 @@ void turbulentPotential::correct()
 	    cPphi_*(2.0*alpha_-1.0)*epsHat_*tpphi_
 	  // 2.0*cPphi_*nutFrac()*(1.0-alpha_)*epsHat_*((2.0/3.0) - tpphi_)
 	  + cP2_*tpphi_*GdK
-	  + cP2_*(1.0-alpha_-alpha_*alpha_*tpphi_)*GdK
+	  + cD1_*(1.0-alpha_)*GdK
+	  //+ cP2_*(1.0-alpha_-alpha_*alpha_*tpphi_)*GdK
 	  //- cP2_*(1.0-alpha_)*((0.5*Gnut/(k_+k0_)) - (tppsi_ & vorticity_))
 	  //+ cD1_*(1.0-alpha_)*(mag(tppsi_ & vorticity_))
 	  //- 2.0*epsHat_*tpphi_/(1.0+(0.4*nut_/nu()))
