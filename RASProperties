@@ -50,13 +50,13 @@ turbulentPotentialCoeffs{
    cD1                 1.12;
    cD2                 2.2;
    cD3				   0.12;
-   cD4				   1.41;
+   cD4				   0.5;
    cPphi               1.7;
-   cP1                 1.7; 
+   cP1                 1.83; 
    cP2                 0.6;
    cP3                 0.12;
    cP4                 0.85714;
-   cEp1                1.44;
+   cEp1                1.45;
    cEp2con			   1.83;
    cMu                 0.21;
    betaK			   0.09;

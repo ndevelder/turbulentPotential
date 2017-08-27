@@ -1360,7 +1360,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
       // cP2_*(1.0 - alpha_)*epsHat_*(ruuModel/(k_+k0_))
-	    cPphi_*(2.0*alpha_-1.0)*epsHat_*tpphi_
+	    cP1_*(2.0*alpha_-1.0)*epsHat_*tpphi_
 	  // 2.0*cPphi_*nutFrac()*(1.0-alpha_)*epsHat_*((2.0/3.0) - tpphi_)
 	  + cP2_*tpphi_*GdK
 	  + cP2_*(1.0-alpha_)*tpphi_*GdK
@@ -1375,7 +1375,7 @@ void turbulentPotential::correct()
 	  // Dissipation 
       - fvm::Sp((2.0*alpha_-1.0)*epsHat_,tpphi_)
 	  // Pressure diffusion  
-	  - fvm::Sp((0.5 + cD4_*sigmaPhi_)*(gradPhiSqrt_ & gradPhiSqrt_)*Ts(),tpphi_)
+	  - fvm::Sp((0.5 + cD4_*sigmaPhi_)*(1.0/(1.0 + cPw_/(reTau())))*(gradPhiSqrt_ & gradPhiSqrt_)*Ts(),tpphi_)
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
 	  - fvm::SuSp((cTv1_*nut_)*(gradk_ & gradTpphi_)/(tpphi_*k_ + k0_),tpphi_)
