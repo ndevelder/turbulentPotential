@@ -59,6 +59,13 @@ tmp<volScalarField> turbulentPotential::Ts() const
     return ((k_+k0_)/(epsilon_ + epsilonSmall_));
 }
 
+
+tmp<volScalarField> turbulentPotential::Ls() const
+{
+    return 0.23*max(pow(k_, 1.5)/(epsilon_ + epsilonSmall_), 70.0*pow(pow3(nu())/(epsilon_ + epsilonSmall_),0.25));
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 turbulentPotential::turbulentPotential
@@ -504,6 +511,10 @@ turbulentPotential::turbulentPotential
    (
        coeffDict_.lookup("eqncMu")
    ),
+   phiType_
+   (
+       coeffDict_.lookup("phiType")
+   ),
    y_
    (
    mesh_
@@ -862,6 +873,19 @@ turbulentPotential::turbulentPotential
             IOobject::AUTO_WRITE
         ),
         (mag(psiReal() ^ vorticity_))
+    ),
+	
+	f_
+    (
+        IOobject
+        (
+            "f",
+            runTime_.timeName(),
+            U_.db(),
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
     )
 {
 
@@ -1343,14 +1367,25 @@ void turbulentPotential::correct()
 	
 	
 	
-    //*************************************//
+  //*************************************//
     // Phi/K equation
     //*************************************//
 
 
     cP1eqn_ = cPphi_*(0.33 + 0.67*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
 	volScalarField ruuModel("ruuModel",1.767*alpha_*k_);
+	volScalarField devSS("devSS", (dev(twoSymm(fvc::grad(U_))) && dev(twoSymm(fvc::grad(U_)))));
 	
+	
+	Info << "Max new term phi: " << max(2.0*(1.0 - cP2_)*(tppsi_.component(2)*uGrad_.component(1))) << endl;
+	Info << "Min new term phi: " << min(2.0*(1.0 - cP2_)*(tppsi_.component(2)*uGrad_.component(1))) << endl;
+	//Info << "Max new term dev: " << max(cP2_*(tppsi_ & (dev(twoSymm(fvc::grad(U_))) & (tppsi_/(mag(tppsi_)))))) << endl;
+	//Info << "Min new term dev: " << min(cP2_*(tppsi_ & (dev(twoSymm(fvc::grad(U_))) & (tppsi_/(mag(tppsi_)))))) << endl;
+	Info << "Max other cp2: " << max(cP2_*tpphi_*GdK) << endl;
+	
+	
+	if(phiType_ == "direct")
+	{
 	
     tmp<fvScalarMatrix> tpphiEqn
     (
@@ -1364,6 +1399,10 @@ void turbulentPotential::correct()
 	  // 2.0*cPphi_*nutFrac()*(1.0-alpha_)*epsHat_*((2.0/3.0) - tpphi_)
 	  + cP2_*tpphi_*GdK
 	  + cP2_*(1.0-alpha_)*tpphi_*GdK
+	  //+ cP2_*(tppsi_ & (dev(twoSymm(fvc::grad(U_))) & (tppsi_/(mag(tppsi_))))) 
+	  //- 2.0*(1.0 - cP2_)*(tpphi_*tr((fvc::grad(U_))))
+	  + 2.0*(1.0 - cP2_)*(tppsi_.component(2)*uGrad_.component(1))
+	  
 	  //+ cP2_*(1.0-alpha_-alpha_*alpha_*tpphi_)*GdK
 	  //- cP2_*(1.0-alpha_)*((0.5*Gnut/(k_+k0_)) - (tppsi_ & vorticity_))
 	  //+ cD1_*(1.0-alpha_)*(mag(tppsi_ & vorticity_))
@@ -1389,6 +1428,53 @@ void turbulentPotential::correct()
     solve(tpphiEqn);
     bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
     }
+	
+	}
+	
+	
+	
+	if(phiType_ == "elliptic")
+	{
+	
+	const volScalarField L2(type() + ".L2", sqr(Ls()));
+	const volScalarField T(Ts());
+	
+	const volScalarField betaphi
+    (
+        "turbulentPotential::betaphi",
+        1.0/T*((1.4 - 6.0)*tpphi_ - 2.0/3.0*(1.4 - 1.0))
+	);
+	
+	// Relaxation function equation
+    tmp<fvScalarMatrix> fEqn
+    (
+      - fvm::laplacian(f_)
+     ==
+      - fvm::Sp(1.0/L2, f_)
+      - 1.0/L2*(betaphi - 0.3*GdK)
+    );
+
+    fEqn().relax();
+    solve(fEqn);
+    bound(f_, dimensionedScalar("fMin", f_.dimensions(), 0.0));
+
+
+    // Turbulence stress normal to streamlines equation
+    tmp<fvScalarMatrix> tpphiEqn
+    (
+        fvm::ddt(tpphi_)
+      + fvm::div(phi_, tpphi_)
+      - fvm::laplacian(DphiEff(), tpphi_)
+      ==
+        min(f_, -betaphi + 0.3*GdK)
+      - fvm::Sp(6.0*epsilon_/k_, tpphi_)
+    );
+
+    tpphiEqn().relax();
+    solve(tpphiEqn);
+	bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
+	
+	}
 
 	// Re-calculate phi/k gradient
     gradTpphi_ = fvc::grad(tpphi_);
@@ -1421,8 +1507,8 @@ void turbulentPotential::correct()
       - fvm::Sp(tpProd_,tppsi_)
 	  
 	  // Pressure strain
-	  + cP2_*(tppsi_ & vorticity_)*tppsi_
-      - fvm::Sp(cD2_*alpha_*(tppsi_ & vorticity_),tppsi_)
+	  - fvm::Sp(cP2_*GdK,tppsi_)
+      - fvm::Sp(cP2_*alpha_*GdK,tppsi_) 
 	  //- fvm::Sp(cD2_*cP1_*(2.0*alpha_-1.0)*epsHat_,tppsi_)
       - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
       

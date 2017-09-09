@@ -132,6 +132,7 @@ class turbulentPotential
 			word              debugWrite_;
 			word              tslimiter_;
 			word			  eqncMu_;
+			word			  phiType_;
 
         //- Wall distance field
         //  Note: different to wall distance in parent RASModel
@@ -166,6 +167,7 @@ class turbulentPotential
             volTensorField gradTppsi_;
             volScalarField tpProdSqr_;
             volScalarField tpProd3d_;
+			volScalarField f_;
 
 
 
@@ -177,6 +179,9 @@ class turbulentPotential
 
     //- Return time scale, Ts using epsilon
     tmp<volScalarField> Ts() const;
+	
+	
+	tmp<volScalarField> Ls() const;
     
     //- Return time scale, TsEh using epsHat
     //tmp<volScalarField> TsEh() const;
