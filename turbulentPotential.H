@@ -146,7 +146,7 @@ class turbulentPotential
             volScalarField nut_;
             volScalarField nutNorm_;
             volScalarField tpphi_;
-            volScalarField tpphisqrt_;
+            volScalarField tpphiSqrt_;
             volVectorField vorticity_;
             volVectorField tppsi_;
             volTensorField uGrad_;
@@ -243,15 +243,6 @@ public:
             return tmp<volVectorField>
             (
                 new volVectorField("gradtpphi", fvc::grad(tpphi_))
-            );
-        }
-
-        //- Return the gradK
-        tmp<volVectorField> gradtpphisqrt() const
-        {
-            return tmp<volVectorField>
-            (
-                new volVectorField("gradtpphisqrt", fvc::grad(tpphisqrt_))
             );
         }
 
