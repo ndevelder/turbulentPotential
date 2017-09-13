@@ -1460,7 +1460,6 @@ void turbulentPotential::correct()
       - fvm::laplacian(f_)
      ==
       - fvm::Sp(1.0/L2, f_)
-	  + fwall/L2
       - (1.0/L2)*(slowPS - fastPS)	  
     );
 
@@ -1476,7 +1475,7 @@ void turbulentPotential::correct()
       + fvm::div(phi_, tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
-        min(f_- fwall,fastPS - slowPS)		
+        min(f_,fastPS - slowPS)		
       - fvm::Sp(GdK, tpphi_)
 	  //+ (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
     );
