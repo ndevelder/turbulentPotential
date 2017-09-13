@@ -1391,7 +1391,15 @@ void turbulentPotential::correct()
 	const volScalarField betaphi
     (
         "turbulentPotential::betaphi",
-        (0.4 + 0.65*pOD)*(tpphi_ - (2.0/3.0))/T
+        //(0.4 + 0.65*pOD)*(tpphi_ - (2.0/3.0))/T
+		//((1.4 - 1.0)/T)*(tpphi_ - 2.0/3.0)
+		((cP1_*(1.0-alpha_))/T)*(tpphi_ - 2.0/3.0) 
+	);
+	
+	const volScalarField fwall
+    (
+        "turbulentPotential::fwall",
+		2.0*nu()*magSqr(gradTpphiSqrt) 
 	);
 	
 	// Relaxation function equation
@@ -1400,8 +1408,8 @@ void turbulentPotential::correct()
       - fvm::laplacian(f_)
      ==
       - fvm::Sp(1.0/L2, f_)
-      - (1.0/L2)*betaphi
-      + 5.0*tpphi_/(T*L2)	  
+	  + fwall/L2
+      - (1.0/L2)*(betaphi - 0.6*tpphi_*GdK)	  
     );
 
     fEqn().relax();
@@ -1416,11 +1424,9 @@ void turbulentPotential::correct()
       + fvm::div(phi_, tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
-        //f_ - 2.0*nu()*magSqr(gradTpphiSqrt)
-		f_
+        min(f_- fwall,0.3*GdK - betaphi)		
       - fvm::Sp(GdK, tpphi_)
-	  - fvm::Sp(5.0*(epsilon_/(k_ + k0_)),tpphi_)
-	  + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
+	  //+ (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
     );
 
     tpphiEqn().relax();
