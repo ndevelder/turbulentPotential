@@ -203,6 +203,51 @@ turbulentPotential::turbulentPotential
             0.85714
         )
     ),
+    eC1_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "eC1",
+            coeffDict_,
+            1.4
+        )
+    ),
+    eC2_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "eC2",
+            coeffDict_,
+            0.3
+        )
+    ),
+    eC3_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "eC3",
+            coeffDict_,
+            0.0
+        )
+    ),
+    eC4_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "eC4",
+            coeffDict_,
+            0.0
+        )
+    ),
+    eC5_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "eC5",
+            coeffDict_,
+            0.0
+        )
+    ),
     cPphi_
     (
         dimensionedScalar::lookupOrAddToDict
@@ -1220,7 +1265,7 @@ void turbulentPotential::correct()
     //Dissipation equation
     //*************************************//	
 	
-	volScalarField cEp1eqn("cEp1eqn",min(1.5*(tpphi_/tpphi_),1.4*(1.0 + (0.033/sqrt(tpphi_ + SMALL)))));
+	volScalarField cEp1eqn("cEp1eqn",min(1.6*(tpphi_/tpphi_),(cEp1_ - 0.05)*(1.0+0.067*alpha_)));
 
     Info << "Max cEp1: " << max(cEp1eqn) << endl; 	
 	Info << "Max cEp1: " << min(cEp1eqn) << endl;    
@@ -1388,12 +1433,19 @@ void turbulentPotential::correct()
 	if(phiType_ == "elliptic")
 	{
 		
-	const volScalarField betaphi
+	const volScalarField slowPS
     (
-        "turbulentPotential::betaphi",
-        //(0.4 + 0.65*pOD)*(tpphi_ - (2.0/3.0))/T
+        "turbulentPotential::slowPS",
+        (eC1_ - 1.0)*(tpphi_ - (2.0/3.0))/T
 		//((1.4 - 1.0)/T)*(tpphi_ - 2.0/3.0)
-		((cP1_*(1.0-alpha_))/T)*(tpphi_ - 2.0/3.0) 
+		//((cP1_*(1.0-alpha_))/T)*(tpphi_ - 2.0/3.0) 
+	);
+	
+	const volScalarField fastPS
+    (
+        "turbulentPotential::slowPS",
+		eC2_*GdK
+		//0.65*pOD*(tpphi_ - (2.0/3.0))/T
 	);
 	
 	const volScalarField fwall
@@ -1409,7 +1461,7 @@ void turbulentPotential::correct()
      ==
       - fvm::Sp(1.0/L2, f_)
 	  + fwall/L2
-      - (1.0/L2)*(betaphi - 0.6*tpphi_*GdK)	  
+      - (1.0/L2)*(slowPS - fastPS)	  
     );
 
     fEqn().relax();
@@ -1424,7 +1476,7 @@ void turbulentPotential::correct()
       + fvm::div(phi_, tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
-        min(f_- fwall,0.3*GdK - betaphi)		
+        min(f_- fwall,fastPS - slowPS)		
       - fvm::Sp(GdK, tpphi_)
 	  //+ (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
     );
