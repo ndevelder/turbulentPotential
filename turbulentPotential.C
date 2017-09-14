@@ -655,7 +655,7 @@ turbulentPotential::turbulentPotential
     (
         IOobject
         (
-            "tpphi",
+            "tpphiSqrt",
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
