@@ -1443,7 +1443,7 @@ void turbulentPotential::correct()
 	
 	const volScalarField fastPS
     (
-        "turbulentPotential::slowPS",
+        "turbulentPotential::fastPS",
 		eC2_*GdK
 		//0.65*pOD*(tpphi_ - (2.0/3.0))/T
 	);
@@ -1466,6 +1466,9 @@ void turbulentPotential::correct()
     fEqn().relax();
     solve(fEqn);
     //bound(f_, dimensionedScalar("fMin", f_.dimensions(), 0.0));
+	
+	Info << "Max f: " << gMax(f) << endl; 	
+	Info << "Min f: " << gMin(f) << endl;
 
 
     // Turbulence stress normal to streamlines equation
