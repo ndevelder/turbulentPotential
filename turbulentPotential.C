@@ -1467,8 +1467,8 @@ void turbulentPotential::correct()
     solve(fEqn);
     //bound(f_, dimensionedScalar("fMin", f_.dimensions(), 0.0));
 	
-	Info << "Max f: " << gMax(f) << endl; 	
-	Info << "Min f: " << gMin(f) << endl;
+	Info << "Max f: " << gMax(f_) << endl; 	
+	Info << "Min f: " << gMin(f_) << endl;
 
 
     // Turbulence stress normal to streamlines equation
