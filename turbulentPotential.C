@@ -1156,7 +1156,7 @@ void turbulentPotential::correct()
 	const volVectorField gradPhi_("gradPhi", fvc::grad(phiReal()));		
 	const volScalarField gradgradPhi_("gradgradPhi", fvc::laplacian(DphiEff(),phiReal()));
 
-	tpphiSqrt_ = sqrt(tpphi_ + SMALL);
+	tpphiSqrt_ = sqrt(tpphi_ + ROOTVSMALL);
 	const volVectorField gradTpphiSqrt("gradTpphiSqrt",fvc::grad(tpphiSqrt_));
 
 	
@@ -1436,7 +1436,7 @@ void turbulentPotential::correct()
 	const volScalarField slowPS
     (
         "turbulentPotential::slowPS",
-        (eC1_ - 1.0)*(tpphi_ - (2.0/3.0))/T
+        (eC1_ - 1.0)*(tpphi_ - (2.0/3.0))*epsHat_
 		//((1.4 - 1.0)/T)*(tpphi_ - 2.0/3.0)
 		//((cP1_*(1.0-alpha_))/T)*(tpphi_ - 2.0/3.0) 
 	);
@@ -1451,7 +1451,8 @@ void turbulentPotential::correct()
 	const volScalarField fwall
     (
         "turbulentPotential::fwall",
-		2.0*nu()*magSqr(gradTpphiSqrt) 
+		2.0*nu()*magSqr(gradTpphiSqrt)
+		//5.0*tpphi_/T
 	);
 	
 	// Relaxation function equation
@@ -1460,7 +1461,9 @@ void turbulentPotential::correct()
       - fvm::laplacian(f_)
      ==
       - fvm::Sp(1.0/L2, f_)
-      - (1.0/L2)*(slowPS - fastPS)	  
+      - (1.0/L2)*(slowPS - fastPS)	 
+      //+ fwall/L2
+	  //+ fvc::laplacian(fwall)
     );
 
     fEqn().relax();
@@ -1478,14 +1481,15 @@ void turbulentPotential::correct()
       + fvm::div(phi_, tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
       ==
-        min(f_,fastPS - slowPS)		
+        f_	
       - fvm::Sp(GdK, tpphi_)
+	  //- fvm::Sp(fwall/tpphi_,tpphi_)
 	  //+ (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
     );
 
     tpphiEqn().relax();
     solve(tpphiEqn);
-	bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
+	bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), ROOTVSMALL));
 	
 	}
 
