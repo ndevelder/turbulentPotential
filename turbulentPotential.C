@@ -482,7 +482,15 @@ turbulentPotential::turbulentPotential
             1.0
         )
     ),
-
+    ellipticSwitch_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "ellipticSwitch",
+            coeffDict_,
+            0.0
+        )
+    ),
 
    nutType_
    (
@@ -1136,7 +1144,10 @@ void turbulentPotential::correct()
         return;
     }
 	
-       
+    
+	
+	//read from a field ,for example U
+    dimensionedScalar cTime = U_.mesh().time().value();
 
 
     //*************************************//	
@@ -1387,7 +1398,7 @@ void turbulentPotential::correct()
 
 	
 	
-	if(phiType_ == "direct")
+	if(phiType_ == "direct" || cTime < ellipticSwitch_ )
 	{
 	
     tmp<fvScalarMatrix> tpphiEqn
@@ -1430,7 +1441,7 @@ void turbulentPotential::correct()
 	const volScalarField T(Ts());	
 	
 	
-	if(phiType_ == "elliptic")
+	if(phiType_ == "elliptic" && cTime > ellipticSwitch_ )
 	{
 		
 	const volScalarField slowPS
@@ -1571,6 +1582,7 @@ void turbulentPotential::correct()
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max G: " << gMax(G) << " Max Gnut: " << gMax(Gnut) <<endl;
     Info<< "Max 3D Production: " << gMax(tpProd3d_) << " Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
+	
 
 }
 

@@ -120,6 +120,7 @@ class turbulentPotential
             dimensionedScalar nutScale_;
             dimensionedScalar nutBlend_;
             dimensionedScalar psiNuFrac_;
+			dimensionedScalar ellipticSwitch_;
             word              nutType_;
             word              solveK_;
             word              solveEps_;
