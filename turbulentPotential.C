@@ -50,11 +50,7 @@ addToRunTimeSelectionTable(RASModel, turbulentPotential, dictionary);
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
 tmp<volScalarField> turbulentPotential::Ts() const
-{
-	const volScalarField S2 = 2*magSqr(dev(symm(uGrad_)));
-	const volScalarField magS = sqrt(S2);	
-	const volScalarField realT = 0.6/(sqrt(6.0)*cMu_*magS*tpphi_); 
-	
+{ 
 	if(tslimiter_ == "true")
 	{
         return max(k_/(epsilon_ + epsilonSmall_), 6.0*sqrt(nu()/(epsilon_ + epsilonSmall_)));
@@ -66,12 +62,7 @@ tmp<volScalarField> turbulentPotential::Ts() const
 
 tmp<volScalarField> turbulentPotential::Ls() const
 {
-	const volScalarField S2 = 2*magSqr(dev(symm(uGrad_)));
-	const volScalarField magS = sqrt(S2);	
-	const volScalarField realL = sqrt(k_)/(sqrt(6.0)*cMu_*magS*tpphi_); 
-	
-
-    return 0.36*max(pow(k_, 1.5)/(epsilon_ + epsilonSmall_), 85.0*pow(pow3(nu())/(epsilon_ + epsilonSmall_),0.25));
+    return cL1_*max(pow(k_, 1.5)/(epsilon_ + epsilonSmall_), cL2_*pow(pow3(nu())/(epsilon_ + epsilonSmall_),0.25));
 }
 
 
@@ -204,6 +195,24 @@ turbulentPotential::turbulentPotential
             0.85714
         )
     ),
+    cL1_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "cL1",
+            coeffDict_,
+            0.36
+        )
+    ),
+    cL2_
+    (
+        dimensionedScalar::lookupOrAddToDict
+        (
+            "cL2",
+            coeffDict_,
+            85.0
+        )
+    ),
     eC1_
     (
         dimensionedScalar::lookupOrAddToDict
@@ -247,15 +256,6 @@ turbulentPotential::turbulentPotential
             "eC5",
             coeffDict_,
             0.0
-        )
-    ),
-    cPphi_
-    (
-        dimensionedScalar::lookupOrAddToDict
-        (
-            "cPphi",
-            coeffDict_,
-            2.0
         )
     ),
     cMu_
@@ -603,7 +603,7 @@ turbulentPotential::turbulentPotential
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (fvc::grad(k_))
     ),
@@ -642,7 +642,7 @@ turbulentPotential::turbulentPotential
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (nut_/max(nut_))
     ),
@@ -733,7 +733,7 @@ turbulentPotential::turbulentPotential
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (sqrt(k_))
     ),
@@ -746,7 +746,7 @@ turbulentPotential::turbulentPotential
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (1.0/(1.0 + 1.5*tpphi_))
     ),
@@ -759,7 +759,7 @@ turbulentPotential::turbulentPotential
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (sqrt(tpphi_*k_))
     ),
@@ -932,7 +932,7 @@ turbulentPotential::turbulentPotential
             runTime_.timeName(),
             U_.db(),
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
         (mag(psiReal() ^ vorticity_))
     ),
@@ -1096,14 +1096,22 @@ bool turbulentPotential::read()
         cP2_.readIfPresent(coeffDict());
         cP3_.readIfPresent(coeffDict());
 		cP4_.readIfPresent(coeffDict());
+		cL1_.readIfPresent(coeffDict());
+		cL2_.readIfPresent(coeffDict());
         cMu_.readIfPresent(coeffDict());
-		cPphi_.readIfPresent(coeffDict());
+		eC1_.readIfPresent(coeffDict());
+		eC2_.readIfPresent(coeffDict());
+		eC3_.readIfPresent(coeffDict());
+		eC4_.readIfPresent(coeffDict());
+		eC5_.readIfPresent(coeffDict());
 		cEhmP_.readIfPresent(coeffDict());
 		cEhmM_.readIfPresent(coeffDict());
 		cEhmPK_.readIfPresent(coeffDict());
 		cEhmPK2_.readIfPresent(coeffDict());
 		cEhR_.readIfPresent(coeffDict());
 		cPr_.readIfPresent(coeffDict());
+		cPrK_.readIfPresent(coeffDict());
+		cPrP_.readIfPresent(coeffDict());
 		cD1_.readIfPresent(coeffDict());
 		cD2_.readIfPresent(coeffDict());
 		cD3_.readIfPresent(coeffDict());
@@ -1131,24 +1139,34 @@ bool turbulentPotential::read()
 void turbulentPotential::correct()
 {
 
+    //**********************************************//	
+    // Bounding values not already defined by model
+    //**********************************************//
+	
+    const dimensionedScalar eH0("minEpsHat", epsHat_.dimensions(), ROOTVSMALL);
+	const dimensionedScalar nut0("minNut", nut_.dimensions(), ROOTVSMALL);
+	const dimensionedScalar tph0("minTpphi", tpphi_.dimensions(), ROOTVSMALL);
+	const dimensionedScalar f0("fMin", f_.dimensions(), 0.0);
+	
 
     if (mesh_.changing())
     {
         y_.correct();
-        bound(k_, dimensionedScalar("minK", k_.dimensions(), SMALL));
-        bound(epsilon_, dimensionedScalar("minEps", epsilon_.dimensions(), SMALL));
-		bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
+        bound(k_, k0_);
+        bound(epsilon_, epsilonSmall_);
+		bound(tpphi_,tph0);
+		bound(nut_,nut0);
+		bound(f_,f0);
     }
+	
 	
     RASModel::correct();
 
+	
     if (!turbulence_)
     {
         return;
     }
-	
-	
-    const dimensionedScalar eH0_("minEpsHat", epsHat_.dimensions(), ROOTVSMALL);
 	
 	
     //*************************************//	
@@ -1156,6 +1174,7 @@ void turbulentPotential::correct()
     //*************************************//
 	
     dimensionedScalar cTime = U_.mesh().time().value();
+	word sMMdebug = runTime_.controlDict().lookup("showMaxMin");
 
 
     //*************************************//	
@@ -1291,7 +1310,7 @@ void turbulentPotential::correct()
                
         nut_ = min(nut_,nutRatMax_*nu());  
 		nut_.correctBoundaryConditions();
-        bound(nut_,dimensionedScalar("minNut", nut_.dimensions(), 0.0));
+        bound(nut_,nut0);
     }	
 
 	
@@ -1302,9 +1321,7 @@ void turbulentPotential::correct()
 	
 	volScalarField cEp1eqn("cEp1eqn",min(1.6*(tpphi_/tpphi_),(cEp1_ - 0.05)*(1.0+0.067*alpha_)));
 
-    Info << "Max cEp1: " << max(cEp1eqn) << endl; 	
-	Info << "Max cEp1: " << min(cEp1eqn) << endl;    
-		   
+
     tmp<fvScalarMatrix> epsEqn  
     (
         fvm::ddt(epsilon_)
@@ -1360,13 +1377,12 @@ void turbulentPotential::correct()
     //*************************************//
     	
     kSqrt_ = sqrt(mag(k_)+k0_);
-    bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), sqrt(SMALL)));
-    //kSqrt_.correctBoundaryConditions();
+    bound(kSqrt_,dimensionedScalar("minKsqrt", kSqrt_.dimensions(), sqrt(ROOTVSMALL)));
 
     gradk_ = fvc::grad(k_);
     gradkSqrt_ = fvc::grad(kSqrt_);
     
-    //Info<< "Made it past Ksqrt" <<endl;
+
 	
 	//label patchID1 = mesh_.boundaryMesh().findPatchID("FOIL_LEAD"); 
 	//Info<< tppsi_.boundaryField()[patchID1] << endl;
@@ -1385,28 +1401,28 @@ void turbulentPotential::correct()
 	if(eqnEpsHat_ == "mod")
 	{
         epsHat_ = epsilon_/(k_ + (cEhmM_*nu()*mag(gradkSqrt_)));
-        bound(epsHat_,eH0_);
+        bound(epsHat_,eH0);
 	}
 	else if(eqnEpsHat_ == "pk")
 	{
         epsHat_ = epsilon_/(k_ + (2.0*cEhmPK_*nu()*mag(gradkSqrt_)/(tpphi_ + SMALL)));
-        bound(epsHat_,eH0_);
+        bound(epsHat_,eH0);
 	}
 	else if(eqnEpsHat_ == "dif")
 	{
         epsHat_ = (epsilon_ - 2.0*nu()*sqr(mag(gradkSqrt_)))/(k_ + k0_);
-        bound(epsHat_,eH0_);
+        bound(epsHat_,eH0);
 	}
 	else if(eqnEpsHat_ == "rough")
 	{
         epsHat_ = 1.0/Ts();
-        bound(epsHat_,eH0_);
+        bound(epsHat_,eH0);
 	}
 	else
 	{
         Info<< "No EpsHat Model Chosen - using mod" <<endl;
 	    epsHat_ = (1.0/(1.0 + (cEhmM_*nu()*mag(gradkSqrt_)/(k_+k0_))))/Ts();
-	    bound(epsHat_,eH0_);
+	    bound(epsHat_,eH0);
 	}
 	
 	
@@ -1416,7 +1432,7 @@ void turbulentPotential::correct()
     //*************************************//
 
 
-    cP1eqn_ = cPphi_*(0.33 + 0.67*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
+    cP1eqn_ = cP1_*(0.33 + 0.67*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
 	volScalarField ruuModel("ruuModel",1.767*alpha_*k_);
 	volScalarField devSS("devSS", (dev(twoSymm(fvc::grad(U_))) && dev(twoSymm(fvc::grad(U_)))));
 
@@ -1436,8 +1452,7 @@ void turbulentPotential::correct()
 	    cP1_*(2.0*alpha_-1.0)*epsHat_*tpphi_
 	  // Pressure Strain Fast
 	  + cP2_*tpphi_*GdK
-	  + cP2_*(1.0-alpha_)*tpphi_*GdK
-	  //+ 2.0*(1.0 - cP2_)*(tppsi_.component(2)*uGrad_.component(1))	  
+	  + cP2_*(1.0-alpha_)*tpphi_*GdK  
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation 
@@ -1455,7 +1470,7 @@ void turbulentPotential::correct()
     {
     tpphiEqn().relax();
     solve(tpphiEqn);
-    bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), SMALL));
+    bound(tpphi_,tph0);
     }
 	
 	}
@@ -1503,13 +1518,12 @@ void turbulentPotential::correct()
       //+ fwall/L2
 	  //+ fvc::laplacian(fwall)
     );
-
+ 
     fEqn().relax();
     solve(fEqn);
-    //bound(f_, dimensionedScalar("fMin", f_.dimensions(), 0.0));
+    //bound(f_, f0);
 	
-	Info << "Max f: " << gMax(f_) << endl; 	
-	Info << "Min f: " << gMin(f_) << endl;
+
 
 
     // Turbulence stress normal to streamlines equation
@@ -1529,7 +1543,7 @@ void turbulentPotential::correct()
 
     tpphiEqn().relax();
     solve(tpphiEqn);
-	bound(tpphi_,dimensionedScalar("minTpphi", tpphi_.dimensions(), ROOTVSMALL));
+	bound(tpphi_,tph0);
 	
 	}
 
@@ -1603,15 +1617,21 @@ void turbulentPotential::correct()
     //*************************************//   
     // Output some max values
     //*************************************//
+	
+	if(sMMdebug == "true")
+	{
     
     volScalarField phiActual("phiActual",tpphi_*k_);
 	volScalarField psiActual("psiZ",tppsi_.component(2)*k_);
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
 	
+	Info << "Max cEp1: " << max(cEp1eqn) << " Min cEp1: " << min(cEp1eqn) << endl; 
+	Info<< "Max f: " << gMax(f_) << " Min f: " << gMin(f_) << endl;
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max G: " << gMax(G) << " Max Gnut: " << gMax(Gnut) <<endl;
     Info<< "Max 3D Production: " << gMax(tpProd3d_) << " Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
-	    
+	
+	}
 
 }
 
