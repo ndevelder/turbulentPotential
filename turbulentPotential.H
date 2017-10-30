@@ -138,6 +138,7 @@ class turbulentPotential
 			word              prodType_;
 			word              debugWrite_;
 			word              tslimiter_;
+			word              lslimiter_;
 			word			  eqncMu_;
 			word			  phiType_;
 
@@ -174,7 +175,6 @@ class turbulentPotential
             volTensorField gradTppsi_;
             volScalarField tpProdSqr_;
             volScalarField tpProd3d_;
-			volScalarField f_;
 
 
 
