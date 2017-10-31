@@ -1461,11 +1461,15 @@ void turbulentPotential::correct()
 	  // Fast Pressure strain
 	  //+ (1.0 - cP2_)*(tppsi_ & vorticity_)*tppsi_
       //- fvm::Sp(cP2_*(2.0*alpha_+0.5)*tpProd_,tppsi_) 
-	  - fvm::Sp(cP2_*(2.0*alpha_+0.4)*tpProd_,tppsi_)
+	  - fvm::Sp(cP2_*tpProd_,tppsi_)
 	  
 	  // Slow Pressure Strain + Dissipation
-      - fvm::Sp((1.0 + cP1_)*(1.0-alpha_)*epsHat_,tppsi_)
+      - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
       
+	  // Dissipation
+	  - fvm::Sp(cD1_*alpha_*epsHat_,tppsi_)
+	  //+ cD3_*(2*alpha_-1.0)*tpphi_*vorticity_
+	  
 	  // Gradients
       + (cTv1_*nut_)*(gradk_ & gradTppsi_)/(k_+k0_)
 
