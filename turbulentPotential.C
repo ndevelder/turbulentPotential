@@ -1409,7 +1409,7 @@ void turbulentPotential::correct()
 	    cP1_*(2.0*alpha_-1.0)*epsHat_*tpphi_
 	  // Pressure Strain Fast
 	  + cP2_*tpphi_*GdK
-	  + cP2_*1.33*(1.0-alpha_)*tpphi_*GdK  
+	  + cP2_*cD2_*(1.0-alpha_)*tpphi_*GdK  
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation 
@@ -1477,7 +1477,7 @@ void turbulentPotential::correct()
       + cT_*sqrt((((nu()/100.0)+nut_)/nu()))*vorticity_
     );
 
-    if(solvePsi_ == "true")
+    if(solvePsi_ == "true") 
     {
     tppsiEqn().relax();
     solve(tppsiEqn);

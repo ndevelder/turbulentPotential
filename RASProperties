@@ -48,12 +48,12 @@ turbulentPotentialCoeffs{
    phiNuFrac           1.0;
    phiV1               0.0;
    cT                  0.0;
-   cD1                 0.67;
-   cD2                 2.2;
+   cD1                 1.0;
+   cD2                 1.2;
    cD3				   0.15;
    cD4				   1.0;
-   cPphi               1.83;
-   cP1                 1.83; 
+   cPphi               1.8;
+   cP1                 1.8; 
    cP2                 0.6;
    cP3                 0.12;
    cP4                 0.85714;
@@ -65,8 +65,8 @@ turbulentPotentialCoeffs{
    cVv1                0.0;
    cTv1                0.0;
    debugWrite          false;
-   tslimiter           true;
-   lslimiter           true;
+   tslimiter           false;
+   lslimiter           false;
    phiType             none;
    psiProd             psi;
    gT1                 0.0;
