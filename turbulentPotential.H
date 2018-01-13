@@ -118,6 +118,7 @@ class turbulentPotential
             dimensionedScalar sigmaEpsVisc_;
             dimensionedScalar sigmaPhiInit_;
             dimensionedScalar sigmaPsiInit_;
+			dimensionedScalar prodType_;
             dimensionedScalar nutScale_;
             dimensionedScalar nutBlend_;
             dimensionedScalar psiNuFrac_;
@@ -132,10 +133,10 @@ class turbulentPotential
             word              eqnSigmaEps_;
             word              eqnSigmaPhi_;
             word              eqnSigmaPsi_;
+            word              eqncEp1_;
             word              eqncEp2_;
        	    word              eqnEpsHat_;
             word              timeScaleEps_;
-			word              prodType_;
 			word              debugWrite_;
 			word              tslimiter_;
 			word              lslimiter_;

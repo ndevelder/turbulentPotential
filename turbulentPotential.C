@@ -30,6 +30,7 @@ License
 #include "components.H"
 #include "fvCFD.H"
 #include "volFields.H"
+#include "wallDist.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -383,7 +384,7 @@ turbulentPotential::turbulentPotential
         (
             "pMix",
             coeffDict_,
-            0.33
+            0.4
         )
     ),
 	cPrK_
@@ -392,7 +393,7 @@ turbulentPotential::turbulentPotential
         (
             "cPrK",
             coeffDict_,
-            0.67
+            0.6
         )
     ),
 	cPrP_
@@ -401,7 +402,7 @@ turbulentPotential::turbulentPotential
         (
             "cPrP",
             coeffDict_,
-            0.83
+            1.0
         )
     ),
 	rPr_
@@ -467,6 +468,15 @@ turbulentPotential::turbulentPotential
             1.0
         )
     ),
+	prodType_
+	(
+		dimensionedScalar::lookupOrAddToDict
+		(
+			"prodType",
+			coeffDict_,
+			1.0
+		)
+	),
     nutScale_
     (
         dimensionedScalar::lookupOrAddToDict
@@ -554,6 +564,11 @@ turbulentPotential::turbulentPotential
        coeffDict_.lookup("eqnSigmaPsi")
    ),
 
+   eqncEp1_
+   (
+       coeffDict_.lookup("eqncEp1")
+   ),
+   
    eqncEp2_
    (
        coeffDict_.lookup("eqncEp2")
@@ -567,10 +582,6 @@ turbulentPotential::turbulentPotential
    timeScaleEps_
    (
        coeffDict_.lookup("timeScaleEps")
-   ),
-   prodType_
-   (
-       coeffDict_.lookup("prodType")
    ),
    debugWrite_
    (
@@ -997,6 +1008,11 @@ turbulentPotential::turbulentPotential
         epsHat_ = (epsilon_ - 2.0*nu()*sqr(mag(gradkSqrt_)))/k_;
         bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
+	else if(eqnEpsHat_ == "dify")
+	{
+        epsHat_ = (epsilon_ - 2.0*nu()*k_/sqr(y_))/k_;
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
+	}
 	else if(eqnEpsHat_ == "rough")
 	{
         epsHat_ = epsilon_/(k_+k0_);
@@ -1217,16 +1233,17 @@ void turbulentPotential::correct()
 	const volScalarField Gnut("Gnut", nut_*S2);
 	
 
-	if(prodType_ == "strain"){
+	if(prodType_.value() == 1.0){
 		Info<< "Using strain production term" <<endl;
-	} else if(prodType_ == "mixed3"){
+		tpProd_ = GdK;
+	} else if(prodType_.value() == 2.0){
 		Info<< "Using mixed 3 production term" <<endl;
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + pMix_*(1.0-alpha_)*cPrK_*alpha_*magS + (1.0 - pMix_)*(1.0 - alpha_)*cPrP_*tpphi_*magS;
 		G = tpProd_*k_;
 		GdK = tpProd_;	
-    } else if(prodType_ == "mixed4"){
+    } else if(prodType_.value() == 3.0){
 		Info<< "Using mixed 4 production term" <<endl;
-		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + 0.88*(1.0-alpha_)*GdK;
+		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + (1.0-alpha_)*GdK;
 		G = tpProd_*k_;
 		GdK = tpProd_;			
 	} else{
@@ -1318,6 +1335,11 @@ void turbulentPotential::correct()
         epsHat_ = (epsilon_ - 2.0*nu()*sqr(mag(gradkSqrt_)))/(k_ + k0_);
         bound(epsHat_,eH0);
 	}
+	else if(eqnEpsHat_ == "dify")
+	{
+        epsHat_ = (epsilon_ - 2.0*nu()*k_/sqr(y_))/k_;
+        bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
+	}
 	else if(eqnEpsHat_ == "rough")
 	{
         epsHat_ = 1.0/Ts();
@@ -1335,10 +1357,14 @@ void turbulentPotential::correct()
 	
     //*************************************//
     //Dissipation equation
-    //*************************************//	
+    //*************************************//
+    volScalarField cEp1eqn("cEp1eqn",(cEp1_*(tpphi_/tpphi_)));
 	
-	volScalarField cEp1eqn("cEp1eqn",min(1.6*(tpphi_/tpphi_),(cEp1_-0.1)*(1.0+0.137*alpha_)));
-
+    if(eqncEp1_ == "true")
+    {	
+		cEp1eqn = min(1.6*(tpphi_/tpphi_),(cEp1_-0.1)*(1.0+0.137*alpha_));
+		Info<< "Using cEps1 Equation" <<endl;
+	}
 
     tmp<fvScalarMatrix> epsEqn   
     (
@@ -1410,6 +1436,7 @@ void turbulentPotential::correct()
 	  // Pressure Strain Fast
 	  + cP2_*tpphi_*GdK
 	  + cP2_*cD2_*(1.0-alpha_)*tpphi_*GdK  
+	  //+ cP3_*epsHat_*tpphi_
 	  // Prod from K eqn
       - fvm::Sp(GdK,tpphi_)
 	  // Dissipation 
