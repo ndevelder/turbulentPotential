@@ -1245,6 +1245,11 @@ void turbulentPotential::correct()
 		Info<< "Using mixed 4 production term" <<endl;
 		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + (1.0-alpha_)*GdK;
 		G = tpProd_*k_;
+		GdK = tpProd_;	
+    } else if(prodType_.value() == 4.0){
+		Info<< "Using mixed 5 production term" <<endl;
+		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + 0.27*(1.0-alpha_)*(magS - 3.0*nut_*mag(gradPhiSqrt_)*magS/(k_+k0_));
+		G = tpProd_*k_;
 		GdK = tpProd_;			
 	} else{
 		Info<< "Using psi-vorticity production term" <<endl;
