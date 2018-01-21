@@ -1381,7 +1381,6 @@ void turbulentPotential::correct()
      ==
        cEp1eqn*G*epsHat_
      - fvm::Sp(cEp2_*epsHat_,epsilon_)
-     + cEp3_*tpProd3d_*epsHat_
     );
 
     if(solveEps_ == "true")
@@ -1538,7 +1537,7 @@ void turbulentPotential::correct()
 	Info << "Max cEp1: " << max(cEp1eqn) << " Min cEp1: " << min(cEp1eqn) << endl; 
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max G: " << gMax(G) << " Max Gnut: " << gMax(Gnut) <<endl;
-    Info<< "Max 3D Production: " << gMax(tpProd3d_) << " Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
+    Info<< "Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
 	
 	}
 
