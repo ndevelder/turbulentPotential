@@ -1205,7 +1205,6 @@ void turbulentPotential::correct()
     // Misc Terms
     //*************************************//
 
-	const volVectorField gradPhiSqrt_("gradPhiSqrt",fvc::grad(phiSqrt_));
 	const volVectorField gradPhi_("gradPhi", fvc::grad(phiReal()));		
 	const volScalarField gradgradPhi_("gradgradPhi", fvc::laplacian(DphiEff(),phiReal()));
 
@@ -1220,6 +1219,7 @@ void turbulentPotential::correct()
 	
     gradTpphi_ = fvc::grad(tpphi_);
     phiSqrt_ = sqrt(tpphi_*k_ + k0_);
+	const volVectorField gradPhiSqrt_("gradPhiSqrt",fvc::grad(phiSqrt_));	
 	
 	
     //*************************************//	
@@ -1248,8 +1248,8 @@ void turbulentPotential::correct()
 		GdK = tpProd_;	
     } else if(prodType_.value() == 4.0){
 		Info<< "Using mixed 5 production term" <<endl;
-		tpProd_ = alpha_*mag(tppsi_ & vorticity_) + 0.27*(1.0-alpha_)*(magS - 3.0*nut_*mag(gradPhiSqrt_)*magS/(k_+k0_));
-		G = tpProd_*k_;
+		G = alpha_*mag(tppsi_ & vorticity_) + 0.27*(1.0-alpha_)*(k_ - 1.5*nut_*mag(gradPhiSqrt_))*magS;
+		tpProd_ = G/(k_+k0_);
 		GdK = tpProd_;			
 	} else{
 		Info<< "Using psi-vorticity production term" <<endl;
