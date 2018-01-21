@@ -1342,6 +1342,7 @@ void turbulentPotential::correct()
 	}
 	else if(eqnEpsHat_ == "dify")
 	{
+		volScalarField eH("eH", (epsilon_ - 2.0*nu()*k_/sqr(y_)));
         epsHat_ = (epsilon_ - 2.0*nu()*k_/sqr(y_))/k_;
         bound(epsHat_,dimensionedScalar("minEpsHat", epsHat_.dimensions(), SMALL));
 	}
