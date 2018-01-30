@@ -39,7 +39,7 @@ turbulentPotentialCoeffs{
    eqncEp1             true;
    eqncEp2             false;
    eqncMu 	           false;
-   eqnEpsHat           pk;
+   eqnEpsHat           mod;
    nutType             phi;
    sigmaKInit          1.0; 
    sigmaEpsInit        0.83;
