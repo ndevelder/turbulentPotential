@@ -698,7 +698,7 @@ turbulentPotential::turbulentPotential
         ),
         (sqrt(tpphi_))
     ),
-    
+	
 	vorticity_
     (
         IOobject
@@ -1358,6 +1358,8 @@ void turbulentPotential::correct()
 	    bound(epsHat_,eH0);
 	}
 	
+
+
 	
 
 	
@@ -1461,11 +1463,10 @@ void turbulentPotential::correct()
     solve(tpphiEqn);
     bound(tpphi_,tph0);
     }
-	
 
 
 
-	
+
     //*************************************//   
     // Psi Specific Constants
     //*************************************//
@@ -1486,7 +1487,7 @@ void turbulentPotential::correct()
       ==
 
 	  // Production
-	    (1.0-cP2_)*tpphi_*vorticity_
+	    (1.0-cP2_)*(tpphi_*vorticity_)
       - fvm::Sp(tpProd_,tppsi_)
 	  + epsHat_*tppsi_
 	  
@@ -1533,12 +1534,12 @@ void turbulentPotential::correct()
     volScalarField phiActual("phiActual",tpphi_*k_);
 	volScalarField psiActual("psiZ",tppsi_.component(2)*k_);
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
+	volVectorField tpphiVort(tpphi_*vorticity_);
 	
 	Info << "Max cEp1: " << max(cEp1eqn) << " Min cEp1: " << min(cEp1eqn) << endl; 
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max G: " << gMax(G) << " Max Gnut: " << gMax(Gnut) <<endl;
     Info<< "Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
-	
 	}
 
 }
