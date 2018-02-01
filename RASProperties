@@ -77,7 +77,7 @@ turbulentPotentialCoeffs{
    cEhmP               0.79;
    cEhmM			   10.0;
    cEhmPK			   0.09;
-   cNF                 0.21;
+   cNF                 3.0;
    cPw                 18;
    nutRatMax 		   1e5;
 }

@@ -1432,14 +1432,14 @@ void turbulentPotential::correct()
 	
 
     tmp<fvScalarMatrix> tpphiEqn
-    (
+    ( 
         fvm::ddt(tpphi_)
       + fvm::div(phi_, tpphi_)
       + fvm::SuSp(-fvc::div(phi_), tpphi_)
       - fvm::laplacian(DphiEff(), tpphi_)
-      ==
+      == 
 	  // Pressure Strain Slow
-	    cP1_*(2.0*alpha_-1.0)*epsHat_*tpphi_
+	    cP1_*nutFrac()*(2.0*alpha_-1.0)*epsHat_*tpphi_
 	  // Pressure Strain Fast
 	  + cP2_*tpphi_*GdK
 	  + cP2_*cD2_*(1.0-alpha_)*tpphi_*GdK  
@@ -1449,7 +1449,7 @@ void turbulentPotential::correct()
 	  // Dissipation 
       - fvm::Sp((2.0*alpha_-1.0)*epsHat_,tpphi_)
 	  // Pressure diffusion  
-	  - fvm::Sp((0.5 + cD4_*sigmaPhi_)*(1.0/(1.0 + cPw_/(reTau())))*(gradPhiSqrt_ & gradPhiSqrt_)*T,tpphi_)
+	  //- fvm::Sp((0.5 + cD4_*sigmaPhi_)*(1.0/(1.0 + cPw_/(reTau())))*(gradPhiSqrt_ & gradPhiSqrt_)*T,tpphi_)
 	  // Extra diffusion terms
       + (cVv1_*nu())*(gradk_ & gradTpphi_)/(k_+k0_)
 	  - fvm::SuSp((cTv1_*nut_)*(gradk_ & gradTpphi_)/(tpphi_*k_ + k0_),tpphi_)
@@ -1497,7 +1497,7 @@ void turbulentPotential::correct()
 	  - fvm::Sp(cP2_*tpProd_,tppsi_)
 	  
 	  // Slow Pressure Strain + Dissipation
-      - fvm::Sp(cP1_*(1.0-alpha_)*epsHat_,tppsi_)
+      - fvm::Sp((cP1_-0.12)*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
 	  - fvm::Sp(cD1_*alpha_*epsHat_,tppsi_)
