@@ -1537,6 +1537,7 @@ void turbulentPotential::correct()
     
     volScalarField phiActual("phiActual",tpphi_*k_);
 	volScalarField psiActual("psiZ",tppsi_.component(2)*k_);
+	volScalarField meanUz("meanUz",U_.component(2));
 	volScalarField uTauSquared((nu() + nut_)*vorticity_.component(2));
 	volVectorField tpphiVort(tpphi_*vorticity_);
 	
@@ -1544,6 +1545,7 @@ void turbulentPotential::correct()
     Info<< "Max nut: " << gMax(nut_) << " Max K: " << gMax(k_) << " Max Epsilon: " << gMax(epsilon_) <<endl;
     Info<< "Max Phi: " << gMax(phiActual) << " Max Psi: " << gMax(psiActual) << " Max G: " << gMax(G) << " Max Gnut: " << gMax(Gnut) <<endl;
     Info<< "Max uTauSquared: " << gMax(uTauSquared) << " Max vorticity: " << gMax(vorticity_) << endl;
+	Info<< "Max Uz: " << gMax(meanUz) << " Min Uz: " << gMin(meanUz) << endl;
 	}
 
 }
