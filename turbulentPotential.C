@@ -1152,6 +1152,7 @@ void turbulentPotential::correct()
 	
     const dimensionedScalar eH0("minEpsHat", epsHat_.dimensions(), ROOTVSMALL);
 	const dimensionedScalar nut0("minNut", nut_.dimensions(), ROOTVSMALL);
+	const dimensionedScalar nutSmall("smallNut", nut_.dimensions(), SMALL);
 	const dimensionedScalar tph0("minTpphi", tpphi_.dimensions(), ROOTVSMALL);
 	const dimensionedScalar L0("lMin", dimensionSet(0,1,0,0,0,0,0), ROOTVSMALL);
 
@@ -1307,18 +1308,7 @@ void turbulentPotential::correct()
 
 	
 
-	//*************************************//
-    // Calculate eddy viscosity
-    //*************************************//
-    
-    if(solveNut_ == "true")
-    {
-		nut_ = cMu_*k_*tpphi_*T;	  
-        nut_ = min(nut_,nutRatMax_*nu());  
-		nut_.correctBoundaryConditions();
-        bound(nut_,nut0);
-    }	
-	
+
 	
 	
 	//*************************************//	
@@ -1436,10 +1426,10 @@ void turbulentPotential::correct()
         fvm::ddt(tpphi_)
       + fvm::div(phi_, tpphi_)
       + fvm::SuSp(-fvc::div(phi_), tpphi_)
-      - fvm::laplacian(DphiEff(), tpphi_)
+      - fvm::laplacian(DphiEff(), tpphi_) 
       == 
 	  // Pressure Strain Slow
-	    cP1_*nutFrac()*(2.0*alpha_-1.0)*epsHat_*tpphi_
+	    cP1_*nutFrac()*(2.0*alpha_ - 1.0)*epsHat_*tpphi_
 	  // Pressure Strain Fast
 	  + cP2_*tpphi_*GdK
 	  + cP2_*cD2_*(1.0-alpha_)*tpphi_*GdK  
@@ -1464,6 +1454,20 @@ void turbulentPotential::correct()
     bound(tpphi_,tph0);
     }
 
+	
+	
+	//*************************************//
+    // Calculate eddy viscosity
+    //*************************************//
+    
+    if(solveNut_ == "true")
+    {
+		nut_ = cMu_*k_*tpphi_*T;	  
+        nut_ = min(nut_,nutRatMax_*nu());  
+		nut_.correctBoundaryConditions();
+        bound(nut_,nut0);
+    }	
+	
 
 
 
@@ -1497,7 +1501,7 @@ void turbulentPotential::correct()
 	  - fvm::Sp(cP2_*tpProd_,tppsi_)
 	  
 	  // Slow Pressure Strain + Dissipation
-      - fvm::Sp((cP1_-0.12)*(1.0-alpha_)*epsHat_,tppsi_)
+      - fvm::Sp(cP1_*nutFrac()*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
 	  - fvm::Sp(cD1_*alpha_*epsHat_,tppsi_)
