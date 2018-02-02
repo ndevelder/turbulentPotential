@@ -1348,6 +1348,18 @@ void turbulentPotential::correct()
 	    bound(epsHat_,eH0);
 	}
 	
+	
+	//*************************************//
+    // Calculate eddy viscosity
+    //*************************************//
+    
+    if(solveNut_ == "true")
+    {
+		nut_ = cMu_*k_*tpphi_*T;	  
+        nut_ = min(nut_,nutRatMax_*nu());  
+		nut_.correctBoundaryConditions();
+        bound(nut_,nut0);
+    }	
 
 
 	
@@ -1417,7 +1429,7 @@ void turbulentPotential::correct()
     // Phi/K equation 
     //*************************************//
 
-
+    const volScalarField nutDamp("nutDamp", nut_/(nut_ + cNF_*nu()));
     cP1eqn_ = cP1_*(0.33 + 0.67*((tpProd_*k_)/(epsilon_ + epsilonSmall_)));
 	
 
@@ -1429,7 +1441,7 @@ void turbulentPotential::correct()
       - fvm::laplacian(DphiEff(), tpphi_) 
       == 
 	  // Pressure Strain Slow
-	    cP1_*nutFrac()*(2.0*alpha_ - 1.0)*epsHat_*tpphi_
+	    cP1_*nutDamp*(2.0*alpha_ - 1.0)*epsHat_*tpphi_
 	  // Pressure Strain Fast
 	  + cP2_*tpphi_*GdK
 	  + cP2_*cD2_*(1.0-alpha_)*tpphi_*GdK  
@@ -1456,17 +1468,7 @@ void turbulentPotential::correct()
 
 	
 	
-	//*************************************//
-    // Calculate eddy viscosity
-    //*************************************//
-    
-    if(solveNut_ == "true")
-    {
-		nut_ = cMu_*k_*tpphi_*T;	  
-        nut_ = min(nut_,nutRatMax_*nu());  
-		nut_.correctBoundaryConditions();
-        bound(nut_,nut0);
-    }	
+
 	
 
 
@@ -1501,7 +1503,7 @@ void turbulentPotential::correct()
 	  - fvm::Sp(cP2_*tpProd_,tppsi_)
 	  
 	  // Slow Pressure Strain + Dissipation
-      - fvm::Sp(cP1_*nutFrac()*(1.0-alpha_)*epsHat_,tppsi_)
+      - fvm::Sp(cP1_*nutDamp*(1.0-alpha_)*epsHat_,tppsi_)
       
 	  // Dissipation
 	  - fvm::Sp(cD1_*alpha_*epsHat_,tppsi_)
