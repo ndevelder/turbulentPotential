@@ -83,44 +83,65 @@ class turbulentPotential
             dimensionedScalar cD2_;
             dimensionedScalar cD3_;
             dimensionedScalar cD4_;
+            dimensionedScalar cVv1_;
+            dimensionedScalar cTv1_;
             dimensionedScalar cP1_;
             dimensionedScalar cP2_;
             dimensionedScalar cP3_;
             dimensionedScalar cP4_;
 			dimensionedScalar cL1_;
 			dimensionedScalar cL2_;
+			dimensionedScalar eC1_;
+            dimensionedScalar eC2_;
+            dimensionedScalar eC3_;
+            dimensionedScalar eC4_;
+			dimensionedScalar eC5_;
             dimensionedScalar cMu_;
 			dimensionedScalar betaK_;
             dimensionedScalar cT_;
-			dimensionedScalar cA_;
+            dimensionedScalar cPr_;
+            dimensionedScalar cPw_;
             dimensionedScalar cEhmM_;
+            dimensionedScalar cEhmP_;
+			dimensionedScalar cEhmPK_;
+			dimensionedScalar cEhmPK2_;
+            dimensionedScalar cEhR_;
 			dimensionedScalar cNF_;
+			dimensionedScalar rS_;
 			dimensionedScalar pMix_;
 			dimensionedScalar cPrK_;
 			dimensionedScalar cPrP_;
-			dimensionedScalar cNL_;
+			dimensionedScalar rPr_;
 			dimensionedScalar nutRatMax_;
-            dimensionedScalar sigmaK_;
-            dimensionedScalar sigmaEps_;
-            dimensionedScalar sigmaPhi_;
-            dimensionedScalar sigmaPsi_;
+            dimensionedScalar sigmaKInit_;
+            dimensionedScalar sigmaEpsInit_;
+            dimensionedScalar sigmaEpsVisc_;
+            dimensionedScalar sigmaPhiInit_;
+            dimensionedScalar sigmaPsiInit_;
 			dimensionedScalar prodType_;
-			dimensionedScalar dampType_;
-			dimensionedScalar cEp1Type_;
-			dimensionedScalar gType_;
+            dimensionedScalar nutScale_;
+            dimensionedScalar nutBlend_;
+            dimensionedScalar psiNuFrac_;
+			dimensionedScalar ellipticSwitch_;
+            word              nutType_;
             word              solveK_;
             word              solveEps_;
             word              solvePsi_;
             word              solvePhi_;
             word              solveNut_;
+            word              eqnSigmaK_;
+            word              eqnSigmaEps_;
+            word              eqnSigmaPhi_;
+            word              eqnSigmaPsi_;
             word              eqncEp1_;
             word              eqncEp2_;
        	    word              eqnEpsHat_;
+            word              timeScaleEps_;
 			word              debugWrite_;
 			word              tslimiter_;
 			word              lslimiter_;
 			word			  eqncMu_;
-			word			  nutReal_;
+			word			  phiType_;
 
         //- Wall distance field
         //  Note: different to wall distance in parent RASModel
@@ -141,12 +162,16 @@ class turbulentPotential
             volScalarField epsHat_;
 			volScalarField kSqrt_;
 			volScalarField alpha_;
-			volScalarField gamma_;
 			volScalarField phiSqrt_;
 			volVectorField gradkSqrt_;
+			volScalarField sigmaK_;
+			volScalarField sigmaEps_;
+			volScalarField sigmaPhi_;
+			volScalarField sigmaPsi_;
 			volScalarField cEp2_;
 			volScalarField tpProd_;
 			volScalarField cP1eqn_;
+			volScalarField dimRat_;
 			volVectorField gradTpphi_;
             volTensorField gradTppsi_;
             volScalarField tpProdSqr_;
@@ -198,8 +223,7 @@ public:
         //- Return the turbulence viscosity
         virtual tmp<volScalarField> nut() const
         {
-            //return mag(tppsi_)*k_/(mag(vorticity_) + (cNL_*nu()/sqr(Ls())));
-			return mag(tppsi_)*k_/(mag(vorticity_) + (cNL_/Ts()));
+            return nut_;
         }
 
         //- Return the phi/k
@@ -251,7 +275,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("nutFrac", nut_/(nut_+cNF_*nu()))
+                new volScalarField("nutFrac", nut()/(nut()+cNF_*nu()))
             );
         }
 
@@ -273,7 +297,7 @@ public:
         {
             return tmp<volScalarField>
             (
-                new volScalarField("nuEff", nut_ + nu())
+                new volScalarField("nuEff", nut() + nu())
             );
         }
 		
@@ -380,7 +404,7 @@ public:
         virtual tmp<volSymmTensorField> devReff() const;
 
         //- Return the source term for the momentum equation
-        virtual tmp<fvVectorMatrix> divDevReff() const;
+        virtual tmp<fvVectorMatrix> divDevReff(volVectorField& U) const;
 
         //- Solve the turbulence equations and correct the turbulence viscosity
         virtual void correct();
